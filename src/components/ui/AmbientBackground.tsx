@@ -44,7 +44,7 @@ export function AmbientBackground() {
       </motion.div>
 
       {/* Cinematic Fog & Navy Wash */}
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/30 via-navy/80 to-navy" />
+      <div className="absolute inset-0 bg-linear-to-b from-navy/30 via-navy/80 to-navy" />
 
       {/* Heroic Central Glow */}
       <motion.div

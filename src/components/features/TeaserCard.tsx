@@ -53,7 +53,7 @@ export function TeaserCard({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="h-full"
     >
-      <GlowCard className="flex flex-col h-full !bg-white/90 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,33,71,0.08)]">
+      <GlowCard className="flex flex-col h-full bg-white/90! backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,33,71,0.08)]">
         
         {/* Dynamic Image Reveal on Hover */}
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-15 mix-blend-multiply transition-opacity duration-700 ease-out">
@@ -66,7 +66,7 @@ export function TeaserCard({
         </div>
 
         {/* Top Gradient Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-gradient-to-r from-df-trust-blue via-df-navy to-df-gold opacity-80 z-10" />
+        <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-linear-to-r from-df-trust-blue via-df-navy to-df-gold opacity-80 z-10" />
         
         <CardHeader className="pb-4 pt-8 px-6 relative z-10">
           <div className="flex justify-between items-center mb-4">
@@ -94,7 +94,7 @@ export function TeaserCard({
 
         <CardContent className="flex-1 space-y-6 px-6 relative z-10">
           {/* Financial Metrics Grid */}
-          <div className="grid grid-cols-2 gap-4 p-5 rounded-xl bg-gradient-to-br from-slate-50/80 to-white/40 border border-slate-200/50 shadow-inner group-hover:border-df-trust-blue/20 transition-colors duration-500">
+          <div className="grid grid-cols-2 gap-4 p-5 rounded-xl bg-linear-to-br from-slate-50/80 to-white/40 border border-slate-200/50 shadow-inner group-hover:border-df-trust-blue/20 transition-colors duration-500">
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
@@ -113,18 +113,18 @@ export function TeaserCard({
 
           {/* AI Blind Teaser Excerpt */}
           <div className="relative mt-6">
-            <div className="absolute -left-3 top-2 bottom-2 w-1 bg-gradient-to-b from-df-trust-blue to-transparent rounded-r-md opacity-30" />
+            <div className="absolute -left-3 top-2 bottom-2 w-1 bg-linear-to-b from-df-trust-blue to-transparent rounded-r-md opacity-30" />
             <div 
               className="text-sm text-slate-600 space-y-2 line-clamp-4 pl-1 font-inter leading-relaxed"
               dangerouslySetInnerHTML={{ __html: blindTeaserHtml }}
             />
             {/* Fade out bottom overlay */}
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none" />
           </div>
           
           <div className="pt-2 flex items-end justify-between border-t border-slate-100 mt-4">
              <div>
-               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Očekivana Cijena</p>
+               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Očekivana Cijena</p>
                <p className="text-2xl font-black text-df-gold drop-shadow-sm font-jakarta">{formatCurrency(askingPrice)}</p>
              </div>
           </div>

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/shared/Header";
-import { Footer } from "@/components/shared/Footer";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -33,11 +32,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NoiseOverlay />
-        <SmoothScroll>
-          <Header />
-          <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
-        </SmoothScroll>
+        <SmoothScroll>{children}</SmoothScroll>
+        <Toaster
+          theme="dark"
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#112240",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fafafa",
+            },
+          }}
+        />
       </body>
     </html>
   );
