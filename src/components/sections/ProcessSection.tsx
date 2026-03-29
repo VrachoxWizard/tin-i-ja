@@ -1,146 +1,81 @@
 "use client";
 
-import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 import { SectionShell } from "@/components/shared/SectionShell";
 import { processSteps } from "@/data/homepage";
 
-const accentStyles = {
-  trust: {
-    bg: "bg-trust/10",
-    border: "border-trust/20",
-    text: "text-blue-400",
-  },
-  gold: {
-    bg: "bg-gold/10",
-    border: "border-gold/20",
-    text: "text-gold",
-  },
-  indigo: {
-    bg: "bg-indigo-500/10",
-    border: "border-indigo-500/20",
-    text: "text-indigo-300",
-  },
-  emerald: {
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    text: "text-emerald-300",
-  },
-} as const;
-
-function ProcessLine() {
-  const ref = useRef<SVGSVGElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <svg
-      ref={ref}
-      className="absolute top-7 left-[12.5%] w-[75%] h-0.5 hidden md:block z-0"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="processGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(37,99,235,0.4)" />
-          <stop offset="100%" stopColor="rgba(212,175,55,0.4)" />
-        </linearGradient>
-      </defs>
-      <motion.line
-        x1="0"
-        y1="1"
-        x2="100%"
-        y2="1"
-        stroke="url(#processGrad)"
-        strokeWidth="1"
-        initial={{ pathLength: prefersReducedMotion ? 1 : 0 }}
-        animate={inView ? { pathLength: 1 } : { pathLength: 0 }}
-        transition={
-          prefersReducedMotion
-            ? { duration: 0 }
-            : { duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }
-        }
-      />
-    </svg>
-  );
-}
-
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
-  },
+    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
+  }),
 };
 
 export function ProcessSection() {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <SectionShell spacing="default">
-      <div className="text-center mb-16">
-        <p className="text-xs uppercase tracking-widest text-slate-500 font-sans mb-4">
-          Proces
-        </p>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-5 tracking-tight">
-          Kako funkcionira
-        </h2>
-        <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          Četiri koraka od procjene do uspješne transakcije.
-        </p>
-      </div>
+    <SectionShell spacing="none" className="py-24 md:py-40 bg-background">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8">
+          
+          {/* Header left side */}
+          <div className="lg:col-span-5 lg:sticky lg:top-32 self-start">
+            <p className="text-sm tracking-[0.2em] text-gold font-semibold uppercase mb-8 flex items-center gap-4">
+              <span className="w-8 h-px bg-gold shadow-[0_0_10px_rgba(229,192,123,0.5)]" />
+              Proces
+            </p>
+            <h2 className="text-4xl md:text-5xl lg:text-7xl font-heading text-white mb-8 leading-[1.05]">
+              Kako funkcionira
+            </h2>
+            <p className="text-slate-400 text-lg md:text-xl font-light leading-relaxed">
+              Četiri strukturirana koraka od inicijalne procjene do uspješne transakcije. Jasan, transparentan i siguran put.
+            </p>
+          </div>
 
-      <div className="relative max-w-5xl mx-auto">
-        <ProcessLine />
+          {/* Steps right side */}
+          <div className="lg:col-span-6 lg:col-start-7">
+            <div className="space-y-12 md:space-y-24 relative">
+              {/* Connecting vertical line */}
+              <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px bg-white/5" />
 
-        {/* Mobile vertical line */}
-        <div
-          className="absolute left-1/2 top-0 bottom-0 w-px bg-linear-to-b from-trust/20 to-gold/20 md:hidden z-0"
-          aria-hidden="true"
-        />
-
-        <motion.div
-          variants={prefersReducedMotion ? undefined : stagger}
-          initial={prefersReducedMotion ? undefined : "hidden"}
-          whileInView={prefersReducedMotion ? undefined : "visible"}
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-6 relative z-10"
-        >
-          {processSteps.map((step, i) => {
-            const a = accentStyles[step.accent];
-
-            return (
-              <motion.div
-                key={step.title}
-                variants={prefersReducedMotion ? undefined : fadeUp}
-                className="flex flex-col items-center text-center"
-              >
-                <div className="relative mb-5">
-                  <div
-                    className={`size-14 rounded-xl ${a.bg} ${a.border} border ${a.text} flex items-center justify-center`}
+              {processSteps.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div
+                    key={step.title}
+                    custom={i}
+                    variants={prefersReducedMotion ? undefined : fadeUp}
+                    initial={prefersReducedMotion ? undefined : "hidden"}
+                    whileInView={prefersReducedMotion ? undefined : "visible"}
+                    viewport={{ once: true, margin: "-100px" }}
+                    className="relative flex gap-8 md:gap-12 group"
                   >
-                    <step.icon className="size-6" />
-                  </div>
-                  <div className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-slate-950 border border-white/20 text-white text-[10px] font-bold flex items-center justify-center font-heading">
-                    {i + 1}
-                  </div>
-                </div>
-                <h3 className="font-heading text-lg font-semibold text-white mb-1.5 tracking-tight">
-                  {step.title}
-                </h3>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-[180px]">
-                  {step.desc}
-                </p>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="size-12 md:size-16 rounded-full bg-[#050A15] border border-white/10 flex items-center justify-center shrink-0 group-hover:border-gold/50 transition-colors duration-500">
+                        <Icon className="size-5 md:size-6 text-gold/70 group-hover:text-gold transition-colors duration-500" strokeWidth={2} />
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 md:pt-4">
+                      <div className="text-gold text-xs font-bold tracking-[0.15em] uppercase mb-4">
+                        Faza 0{i + 1}
+                      </div>
+                      <h3 className="font-heading text-2xl md:text-3xl text-white mb-4 leading-tight">
+                        {step.title}
+                      </h3>
+                      <p className="text-slate-200 font-light leading-relaxed text-base md:text-lg">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </SectionShell>
   );

@@ -13,12 +13,12 @@
   --font-jakarta: var(--font-heading);
   --font-inter: var(--font-sans);
   --font-dm-sans: var(--font-heading);
-  --color-navy: #0a192f;
-  --color-gold: #d4af37;
-  --color-trust: #2563eb;
-  --color-df-navy: #0a192f;
-  --color-df-trust-blue: #1565c0;
-  --color-df-gold: #d4af37;
+  --color-navy: #050a15;
+  --color-gold: #e5c07b;
+  --color-trust: #3b82f6;
+  --color-df-navy: #050a15;
+  --color-df-trust-blue: #3b82f6;
+  --color-df-gold: #e5c07b;
   --color-card-elevated: var(--card-elevated);
   --color-surface-glass: var(--surface-glass);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
@@ -108,39 +108,39 @@
 }
 
 .dark {
-  --background: #060d1b;
-  --foreground: #f0f2f5;
-  --card: #0c1829;
-  --card-foreground: #f0f2f5;
-  --card-elevated: #111f35;
-  --surface-glass: rgba(12, 24, 41, 0.7);
-  --popover: #0a1525;
-  --popover-foreground: #f0f2f5;
-  --primary: #d4af37;
-  --primary-foreground: #060d1b;
-  --secondary: #2563eb;
-  --secondary-foreground: #f0f2f5;
-  --muted: #0e1a2e;
-  --muted-foreground: #7b8ba5;
-  --accent: #111f35;
-  --accent-foreground: #f0f2f5;
+  --background: #030712;
+  --foreground: #f8fafc;
+  --card: #050a15;
+  --card-foreground: #f8fafc;
+  --card-elevated: #0b1120;
+  --surface-glass: rgba(5, 10, 21, 0.7);
+  --popover: #050a15;
+  --popover-foreground: #f8fafc;
+  --primary: #e5c07b;
+  --primary-foreground: #030712;
+  --secondary: #3b82f6;
+  --secondary-foreground: #f8fafc;
+  --muted: #0f172a;
+  --muted-foreground: #94a3b8;
+  --accent: #0f172a;
+  --accent-foreground: #f8fafc;
   --destructive: #ef4444;
-  --border: #1a2d47;
-  --input: #1a2d47;
-  --ring: #d4af37;
-  --chart-1: #2563eb;
-  --chart-2: #d4af37;
-  --chart-3: #f0f2f5;
-  --chart-4: #7b8ba5;
-  --chart-5: #1a2d47;
-  --sidebar: #0c1829;
-  --sidebar-foreground: #f0f2f5;
-  --sidebar-primary: #d4af37;
-  --sidebar-primary-foreground: #060d1b;
-  --sidebar-accent: #1a2d47;
-  --sidebar-accent-foreground: #f0f2f5;
-  --sidebar-border: #1a2d47;
-  --sidebar-ring: #d4af37;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #e5c07b;
+  --chart-1: #3b82f6;
+  --chart-2: #e5c07b;
+  --chart-3: #f8fafc;
+  --chart-4: #94a3b8;
+  --chart-5: #1e293b;
+  --sidebar: #050a15;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #e5c07b;
+  --sidebar-primary-foreground: #030712;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #e5c07b;
 }
 
 @layer base {
@@ -154,16 +154,14 @@
     @apply font-sans;
   }
   h1 {
-    @apply font-heading font-extrabold;
-    letter-spacing: -0.04em;
-    font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+    @apply font-heading font-medium tracking-normal;
+    font-size: clamp(3rem, 6vw + 1rem, 6.5rem);
     line-height: 1.05;
   }
   h2 {
-    @apply font-heading font-bold;
-    letter-spacing: -0.025em;
-    font-size: clamp(2rem, 3vw + 1rem, 3rem);
-    line-height: 1.15;
+    @apply font-heading font-medium tracking-normal;
+    font-size: clamp(2.25rem, 4vw + 1rem, 4.5rem);
+    line-height: 1.1;
   }
   h3 {
     @apply font-heading font-semibold tracking-tight;

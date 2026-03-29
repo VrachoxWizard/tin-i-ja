@@ -3,37 +3,35 @@ import { trustPoints } from "@/data/homepage";
 
 export function TrustSection() {
   return (
-    <SectionShell spacing="default">
-      <div className="text-center mb-16">
-        <p className="text-xs uppercase tracking-widest text-slate-500 font-sans mb-4">
+    <SectionShell spacing="none" className="py-24 md:py-40 bg-[#02040A]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p className="text-sm tracking-[0.2em] text-gold font-semibold uppercase mb-8 flex items-center justify-center gap-4">
+          <span className="w-8 h-px bg-gold" />
           Naš pristup
+          <span className="w-8 h-px bg-gold" />
         </p>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-5 tracking-tight">
+        <h2 className="text-4xl md:text-5xl lg:text-7xl font-heading text-white mb-24 tracking-tight leading-[1.05]">
           Zašto DealFlow?
         </h2>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-          Transparentnost, preciznost i sigurnost — temelji na kojima gradimo
-          povjerenje.
-        </p>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {trustPoints.map(({ icon: Icon, title, description }) => (
-          <div
-            key={title}
-            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 hover:border-white/[0.12] transition-colors duration-300"
-          >
-            <div className="size-11 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-5">
-              <Icon className="size-5 text-slate-400" aria-hidden="true" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 max-w-6xl mx-auto md:divide-x divide-white/5">
+          {trustPoints.map(({ icon: Icon, title, description }, i) => (
+            <div
+              key={title}
+              className={`flex flex-col items-center md:px-8`}
+            >
+              <div className="mb-10 p-5 rounded-full bg-[#050A15] border border-white/5">
+                <Icon className="size-6 text-gold/80" strokeWidth={1.5} />
+              </div>
+              <h3 className="font-heading text-2xl md:text-3xl font-medium text-white mb-6">
+                {title}
+              </h3>
+              <p className="text-slate-400 font-light leading-relaxed max-w-sm mx-auto">
+                {description}
+              </p>
             </div>
-            <h3 className="font-heading text-lg font-semibold text-white mb-3 tracking-tight">
-              {title}
-            </h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              {description}
-            </p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </SectionShell>
   );

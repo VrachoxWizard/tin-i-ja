@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, DM_Sans } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
@@ -11,7 +11,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const dmSans = DM_Sans({
+const playfair = Playfair_Display({
   variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="hr"
-      className={`${inter.variable} ${dmSans.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${playfair.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
         <NoiseOverlay />

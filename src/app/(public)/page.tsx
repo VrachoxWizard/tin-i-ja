@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ValuePropsBar } from "@/components/sections/ValuePropsBar";
 import { DualJourneySection } from "@/components/sections/DualJourneySection";
+import { GalleryCarousel } from "@/components/sections/GalleryCarousel";
 import { FeaturesBento } from "@/components/sections/FeaturesBento";
 import { ProcessSection } from "@/components/sections/ProcessSection";
 import { TrustSection } from "@/components/sections/TrustSection";
@@ -19,6 +20,7 @@ export default function Home() {
       <HeroSection />
       <ValuePropsBar />
       <DualJourneySection />
+      <GalleryCarousel />
       <FeaturesBento />
       <ProcessSection />
       <TrustSection />

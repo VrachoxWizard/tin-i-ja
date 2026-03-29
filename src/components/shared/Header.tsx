@@ -62,7 +62,7 @@ export function Header() {
           className="font-heading text-2xl font-bold tracking-tight text-white flex items-center gap-2 group"
         >
           <div className="size-8 rounded-lg bg-linear-to-br from-trust to-blue-700 flex items-center justify-center shadow-lg group-hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-all duration-300 border border-white/10">
-            <span className="text-white text-sm font-bold">D</span>
+            <span className="text-white text-sm font-bold pl-[1px]">D</span>
           </div>
           DealFlow
         </Link>
@@ -94,7 +94,7 @@ export function Header() {
         </div>
 
         {/* Desktop CTA — idle glow pulse */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-8">
           <Link
             href="/login"
             className="font-sans text-sm font-semibold text-slate-300 hover:text-white transition-colors"
@@ -102,7 +102,7 @@ export function Header() {
             Prijava
           </Link>
           <Link href="/valuate">
-            <Button className="btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading px-6 shadow-[0_0_15px_rgba(201,165,80,0.3)] hover:shadow-[0_0_25px_rgba(201,165,80,0.5)] transition-all border-none group animate-[glow-pulse_3s_ease-in-out_infinite]">
+            <Button className="btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading px-6 shadow-[0_0_15px_rgba(201,165,80,0.3)] hover:shadow-[0_0_25px_rgba(201,165,80,0.5)] transition-all border-none group animate-[glow-pulse_6s_ease-in-out_infinite]">
               Procijeni vrijednost
               <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
             </Button>

@@ -2,29 +2,29 @@ import { valueProps } from "@/data/homepage";
 
 export function ValuePropsBar() {
   return (
-    <section className="relative z-30 -mt-12 mx-4 md:mx-auto max-w-5xl">
-      <div className="relative py-8 md:py-10 bg-slate-900/60 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden">
-        {/* Top edge highlight */}
-        <div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-white/15 to-transparent" />
-
-        <div className="flex flex-wrap justify-evenly items-center relative z-10 px-6 md:px-12 gap-y-6">
+    <section className="relative z-30 -mt-16 mx-4 md:mx-auto max-w-6xl">
+      <div className="relative py-10 bg-background/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-2xl">
+        <div className="flex flex-wrap justify-evenly items-center relative z-10 px-6 md:px-12 gap-y-8">
           {valueProps.map(({ icon: Icon, label, desc }, i) => (
             <div key={label} className="flex items-center gap-y-6">
               {i > 0 && (
-                <div className="hidden md:block w-px h-10 bg-white/[0.08] mx-6" />
+                <div className="hidden md:block w-px h-12 bg-white/10 mx-6 lg:mx-10" />
               )}
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+              <div className="flex items-start gap-4">
+                <div className="mt-1">
                   <Icon
-                    className="size-4.5 text-slate-400"
+                    className="size-5 text-gold"
                     aria-hidden="true"
+                    strokeWidth={1.5}
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-heading font-semibold text-white">
+                  <div className="text-base font-heading font-medium tracking-wide text-white mb-1">
                     {label}
                   </div>
-                  <div className="text-xs text-slate-500">{desc}</div>
+                  <div className="text-sm font-light text-slate-400">
+                    {desc}
+                  </div>
                 </div>
               </div>
             </div>

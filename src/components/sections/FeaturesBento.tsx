@@ -1,47 +1,20 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 import { SectionShell } from "@/components/shared/SectionShell";
 import { features } from "@/data/homepage";
 
-const accentStyles = {
-  trust: {
-    iconBg: "bg-trust/10",
-    iconBorder: "border-trust/20",
-    iconText: "text-blue-400",
-    hoverBorder: "hover:border-trust/20",
-  },
-  gold: {
-    iconBg: "bg-gold/10",
-    iconBorder: "border-gold/20",
-    iconText: "text-gold",
-    hoverBorder: "hover:border-gold/20",
-  },
-  indigo: {
-    iconBg: "bg-indigo-500/10",
-    iconBorder: "border-indigo-500/20",
-    iconText: "text-indigo-300",
-    hoverBorder: "hover:border-indigo-500/20",
-  },
-  emerald: {
-    iconBg: "bg-emerald-500/10",
-    iconBorder: "border-emerald-500/20",
-    iconText: "text-emerald-300",
-    hoverBorder: "hover:border-emerald-500/20",
-  },
-} as const;
-
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.15 } },
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
   },
 };
 
@@ -49,70 +22,77 @@ export function FeaturesBento() {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <SectionShell spacing="emphasis">
-      <div className="text-center mb-16">
-        <p className="text-xs uppercase tracking-widest text-slate-500 font-sans mb-4">
-          Platforma
-        </p>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-5 tracking-tight leading-tight">
-          Institucionalna kvaliteta. <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-trust via-blue-400 to-indigo-300">
-            Tehnološka preciznost.
-          </span>
-        </h2>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
-          Sigurni procesi, pametni algoritmi i stroga pravila privatnosti za
-          optimalan ishod svake transakcije.
-        </p>
-      </div>
+    <SectionShell spacing="none" className="py-24 md:py-40 bg-[#02040A]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="mb-20 md:mb-32 max-w-3xl">
+          <p className="text-sm tracking-[0.2em] text-gold font-semibold uppercase mb-8 flex items-center gap-4">
+            <span className="w-8 h-px bg-gold shadow-[0_0_10px_rgba(229,192,123,0.5)]" />
+            Platforma
+          </p>
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-heading text-white mb-8 leading-[1.05]">
+            Institucionalna kvaliteta. <br />
+            <span className="text-white/60 italic font-light">
+              Tehnološka preciznost.
+            </span>
+          </h2>
+          <p className="text-slate-400 text-lg md:text-xl font-light leading-relaxed max-w-2xl">
+            Sigurni procesi, pametni algoritmi i stroga pravila privatnosti za
+            optimalan ishod svake transakcije.
+          </p>
+        </div>
 
-      <motion.div
-        variants={prefersReducedMotion ? undefined : staggerContainer}
-        initial={prefersReducedMotion ? undefined : "hidden"}
-        whileInView={prefersReducedMotion ? undefined : "visible"}
-        viewport={{ once: true, margin: "-50px" }}
-        className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-5"
-      >
-        {features.map((feature) => {
-          const a = accentStyles[feature.accent];
-          const Icon = feature.icon;
-
-          const gridClass =
-            feature.size === "large"
-              ? "md:col-span-2 md:row-span-1"
-              : feature.size === "tall"
-                ? "md:col-span-1 md:row-span-2"
-                : "md:col-span-1 md:row-span-1";
-
-          return (
-            <motion.div
-              key={feature.title}
-              variants={prefersReducedMotion ? undefined : fadeUp}
-              className={`${gridClass} border border-white/[0.06] rounded-2xl p-8 md:p-10 ${a.hoverBorder} hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group flex flex-col`}
-            >
-              {/* Subtle hover glow — no animated orbs */}
-              <div className="absolute inset-0 bg-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              <div className="relative z-10 flex flex-col h-full">
-                <div
-                  className={`size-12 rounded-xl ${a.iconBg} ${a.iconBorder} border ${a.iconText} flex items-center justify-center mb-5`}
-                >
-                  <Icon className="size-5" />
+        {/* Asymmetrical Bento Grid */}
+        <motion.div
+          variants={prefersReducedMotion ? undefined : staggerContainer}
+          initial={prefersReducedMotion ? undefined : "hidden"}
+          whileInView={prefersReducedMotion ? undefined : "visible"}
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-12 gap-px bg-white/5 border border-white/5 rounded-3xl overflow-hidden"
+        >
+          {features.map((feature, idx) => {
+            const Icon = feature.icon;
+            
+            // Generate an asymmetric layout based on index
+            let gridClasses = "md:col-span-4";
+            if (idx === 0) gridClasses = "md:col-span-8";
+            
+            return (
+              <motion.div
+                key={feature.title}
+                variants={prefersReducedMotion ? undefined : fadeUp}
+                className={`${gridClasses} bg-background p-10 md:p-14 hover:bg-[#050A15] transition-colors duration-700 group flex flex-col justify-between min-h-[320px]`}
+              >
+                <div>
+                  <div className="mb-8">
+                    <Icon className="size-6 text-gold/70 group-hover:text-gold transition-colors duration-500" strokeWidth={2} />
+                  </div>
+                  <h3 className="font-heading text-2xl md:text-3xl text-white mb-4 leading-tight">
+                    {feature.title}
+                  </h3>
                 </div>
-
-                {feature.size === "tall" && <div className="flex-1" />}
-
-                <h3 className="font-heading text-xl md:text-2xl font-semibold text-white mb-3 tracking-tight">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-slate-200 font-light leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+              </motion.div>
+            );
+          })}
+
+          {/* Decorative Media Fill for the remaining 4 columns */}
+          <motion.div
+            variants={prefersReducedMotion ? undefined : fadeUp}
+            className="md:col-span-4 relative bg-[#050A15] p-0 min-h-[320px] overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent z-10" />
+            <img 
+              src="/images/m_and_a_carousel_1_1774797397476.png" 
+              alt="DealFlow Premium Architecture"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-70 transition-opacity duration-700 mix-blend-luminosity"
+            />
+            <div className="absolute inset-0 border border-white/5" />
+          </motion.div>
+        </motion.div>
+      </div>
     </SectionShell>
   );
 }
