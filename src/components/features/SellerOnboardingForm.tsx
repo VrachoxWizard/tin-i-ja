@@ -140,14 +140,14 @@ export function SellerOnboardingForm() {
   }
 
   return (
-    <Card className="border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl shadow-glass relative overflow-hidden rounded-2xl font-inter">
+    <Card className="border-white/[0.06] bg-card/80 backdrop-blur-xl shadow-glass relative overflow-hidden rounded-2xl">
       {/* Decorative gradients */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-df-trust-blue/10 dark:bg-df-trust-blue/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-df-gold/10 dark:bg-df-gold/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-trust/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[hsl(var(--df-gold))]/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
-      <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-slate-800 z-20">
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5 z-20 rounded-t-2xl overflow-hidden">
         <motion.div
-          className="h-full bg-df-trust-blue shadow-[0_0_10px_rgba(21,101,192,0.5)]"
+          className="h-full bg-gradient-to-r from-[hsl(var(--df-gold))] to-trust rounded-full shadow-[0_0_8px_rgba(212,175,55,0.3)]"
           initial={{ width: "33.33%" }}
           animate={{ width: `${(step / 3) * 100}%` }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -173,10 +173,10 @@ export function SellerOnboardingForm() {
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-6"
               >
                 <div className="space-y-3">
@@ -287,10 +287,10 @@ export function SellerOnboardingForm() {
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -341,8 +341,8 @@ export function SellerOnboardingForm() {
                   />
                 </div>
 
-                <div className="space-y-3 p-5 bg-df-navy/5 dark:bg-white/5 border border-df-navy/10 dark:border-white/10 rounded-xl">
-                  <Label className="text-sm font-bold text-slate-900 dark:text-white">
+                <div className="space-y-3 p-5 bg-[hsl(var(--df-gold))]/5 border border-[hsl(var(--df-gold))]/20 rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.08)]">
+                  <Label className="text-sm font-bold text-white">
                     Željena cijena prodaje (EUR)
                   </Label>
                   <Input
@@ -352,7 +352,7 @@ export function SellerOnboardingForm() {
                     onChange={handleChange}
                     required
                     placeholder="Potrebno za teaser"
-                    className="h-12 bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter font-semibold text-lg"
+                    className="h-12 bg-white/[0.03] border-[hsl(var(--df-gold))]/30 rounded-xl focus:ring-[hsl(var(--df-gold))]/30 focus:border-[hsl(var(--df-gold))]/50 focus:shadow-[0_0_20px_rgba(212,175,55,0.15)] transition-all font-semibold text-lg"
                   />
                 </div>
               </motion.div>
@@ -361,10 +361,10 @@ export function SellerOnboardingForm() {
             {step === 3 && (
               <motion.div
                 key="step3"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-6"
               >
                 <div className="space-y-3">

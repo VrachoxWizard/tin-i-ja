@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Send } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function Footer() {
   return (
@@ -13,7 +16,13 @@ export function Footer() {
 
       <div className="mx-auto py-20 px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         {/* Call to action section at the top of the footer */}
-        <div className="flex flex-col md:flex-row items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm mb-16 shadow-glass">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col md:flex-row items-center justify-between bg-white/5 border border-white/[0.08] rounded-2xl p-8 backdrop-blur-sm mb-16 shadow-glass"
+        >
           <div className="mb-6 md:mb-0">
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-2">
               Spremni za sljedeći korak?
@@ -29,7 +38,7 @@ export function Footer() {
               <ArrowRight className="ml-2 size-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-12">
           <div className="md:col-span-2 space-y-6">
@@ -191,14 +200,16 @@ export function Footer() {
             {/* Social Media Icons */}
             <div className="flex gap-3 mt-6">
               {["LinkedIn", "X", "Facebook", "Instagram"].map((platform) => (
-                <a
+                <motion.a
                   key={platform}
                   href="#"
                   aria-label={platform}
+                  whileHover={{ y: -2 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   className="size-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:bg-gold hover:text-navy hover:border-gold transition-all duration-300 text-xs font-bold"
                 >
                   {platform.charAt(0)}
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>

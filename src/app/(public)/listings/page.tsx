@@ -23,7 +23,7 @@ export default async function ListingsPage() {
   const { data: listings } = await supabase.rpc("get_active_teasers");
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-slate-950">
       {/* Search Header - Premium Dark Section */}
       <div className="relative bg-[#0A192F] pt-24 pb-16 overflow-hidden">
         {/* Subtle background glow */}
@@ -64,13 +64,13 @@ export default async function ListingsPage() {
         <div className="container mx-auto px-4 max-w-7xl flex flex-col md:flex-row gap-8">
           {/* Sidebar Filters - Glassmorphic */}
           <aside className="w-full md:w-72 shrink-0">
-            <div className="bg-white/70 backdrop-blur-xl p-7 rounded-3xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sticky top-28 space-y-8">
-              <div className="flex items-center justify-between pb-5 border-b border-slate-200/60">
-                <h3 className="font-bold text-lg text-[#0A192F] flex items-center gap-2 font-jakarta">
-                  <SlidersHorizontal className="w-5 h-5 text-[#0066FF]" />{" "}
+            <div className="bg-card/80 backdrop-blur-xl p-7 rounded-3xl border border-white/[0.06] shadow-glass sticky top-28 space-y-8">
+              <div className="flex items-center justify-between pb-5 border-b border-white/[0.06]">
+                <h3 className="font-bold text-lg text-white flex items-center gap-2 font-heading">
+                  <SlidersHorizontal className="w-5 h-5 text-blue-400" />{" "}
                   Filteri
                 </h3>
-                <button className="text-sm text-slate-500 hover:text-[#0066FF] font-semibold transition-colors duration-200">
+                <button className="text-sm text-slate-500 hover:text-[hsl(var(--df-gold))] font-semibold transition-colors duration-200">
                   Poništi sve
                 </button>
               </div>
@@ -78,14 +78,14 @@ export default async function ListingsPage() {
               <div className="space-y-6">
                 {/* Industrija */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                  <Label className="text-sm font-bold text-slate-400 uppercase tracking-wide">
                     Industrija
                   </Label>
                   <Select defaultValue="all">
-                    <SelectTrigger className="w-full bg-white/50 border-slate-200/60 h-11 rounded-xl shadow-sm focus:ring-[#0066FF]">
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] h-11 rounded-xl shadow-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-slate-200/60 shadow-xl">
+                    <SelectContent className="rounded-xl border-white/[0.08] shadow-xl bg-card">
                       <SelectItem value="all">Sve Industrije</SelectItem>
                       <SelectItem value="it">IT i Softver</SelectItem>
                       <SelectItem value="manufacturing">Proizvodnja</SelectItem>
@@ -96,14 +96,14 @@ export default async function ListingsPage() {
 
                 {/* Regija */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                  <Label className="text-sm font-bold text-slate-400 uppercase tracking-wide">
                     Regija
                   </Label>
                   <Select defaultValue="all">
-                    <SelectTrigger className="w-full bg-white/50 border-slate-200/60 h-11 rounded-xl shadow-sm focus:ring-[#0066FF]">
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] h-11 rounded-xl shadow-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-slate-200/60 shadow-xl">
+                    <SelectContent className="rounded-xl border-white/[0.08] shadow-xl bg-card">
                       <SelectItem value="all">Cijela Hrvatska</SelectItem>
                       <SelectItem value="zagreb">Grad Zagreb</SelectItem>
                       <SelectItem value="dalmacija">Dalmacija</SelectItem>
@@ -114,14 +114,14 @@ export default async function ListingsPage() {
 
                 {/* EBITDA */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                  <Label className="text-sm font-bold text-slate-400 uppercase tracking-wide">
                     EBITDA Raspon
                   </Label>
                   <Select defaultValue="any">
-                    <SelectTrigger className="w-full bg-white/50 border-slate-200/60 h-11 rounded-xl shadow-sm focus:ring-[#0066FF]">
+                    <SelectTrigger className="w-full bg-white/[0.03] border-white/[0.08] h-11 rounded-xl shadow-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-slate-200/60 shadow-xl">
+                    <SelectContent className="rounded-xl border-white/[0.08] shadow-xl bg-card">
                       <SelectItem value="any">Bilo koji iznos</SelectItem>
                       <SelectItem value="0-100">Do 100k EUR</SelectItem>
                       <SelectItem value="100-500">100k - 500k EUR</SelectItem>
@@ -132,7 +132,7 @@ export default async function ListingsPage() {
               </div>
 
               <div className="pt-4">
-                <Button className="w-full bg-[#0A192F] hover:bg-[#081324] text-white shadow-md hover:shadow-lg transition-all h-12 rounded-xl font-bold">
+                <Button className="w-full bg-trust hover:bg-trust/90 text-white shadow-md hover:shadow-lg transition-all h-12 rounded-xl font-bold">
                   Primijeni Filtere
                 </Button>
               </div>
@@ -145,7 +145,7 @@ export default async function ListingsPage() {
             <div className="flex items-center justify-between mb-6 px-1">
               <p className="text-slate-500 font-medium text-sm">
                 Prikazano{" "}
-                <span className="font-bold text-df-navy">
+                <span className="font-bold text-white">
                   {listings?.length || 0}
                 </span>{" "}
                 rezultata
@@ -155,10 +155,10 @@ export default async function ListingsPage() {
                   Poredaj po:
                 </span>
                 <Select defaultValue="newest">
-                  <SelectTrigger className="w-45 bg-white/50 border-slate-200 h-9 rounded-lg shadow-sm text-sm">
+                  <SelectTrigger className="w-45 bg-white/[0.03] border-white/[0.08] h-9 rounded-lg shadow-sm text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-lg border-slate-200 shadow-xl">
+                  <SelectContent className="rounded-lg border-white/[0.08] shadow-xl bg-card">
                     <SelectItem value="newest">Najnovije dodano</SelectItem>
                     <SelectItem value="ebitda-desc">Najviša EBITDA</SelectItem>
                     <SelectItem value="revenue-desc">Najviši Prihod</SelectItem>
@@ -191,11 +191,11 @@ export default async function ListingsPage() {
                 ),
               )}
               {(!listings || listings.length === 0) && (
-                <div className="col-span-1 lg:col-span-2 text-center py-32 bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-sm flex flex-col items-center justify-center">
-                  <div className="w-20 h-20 bg-df-trust-blue/10 rounded-full flex items-center justify-center mb-6">
-                    <Search className="w-10 h-10 text-df-trust-blue" />
+                <div className="col-span-1 lg:col-span-2 text-center py-32 bg-card/80 backdrop-blur-xl rounded-3xl border border-white/[0.06] shadow-glass flex flex-col items-center justify-center">
+                  <div className="w-20 h-20 bg-trust/10 rounded-full flex items-center justify-center mb-6">
+                    <Search className="w-10 h-10 text-blue-400" />
                   </div>
-                  <h3 className="text-2xl font-bold text-df-navy font-jakarta mb-2">
+                  <h3 className="text-2xl font-bold text-white font-heading mb-2">
                     Nema rezultata
                   </h3>
                   <p className="text-slate-500 max-w-md mx-auto">

@@ -94,18 +94,18 @@ export function ValuatorWizard() {
   };
 
   const stepVariants: Variants = {
-    hidden: { opacity: 0, x: 20, filter: "blur(4px)" },
+    hidden: { opacity: 0, x: 40, filter: "blur(4px)" },
     visible: {
       opacity: 1,
       x: 0,
       filter: "blur(0px)",
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { type: "spring" as const, stiffness: 300, damping: 30 },
     },
     exit: {
       opacity: 0,
-      x: -20,
+      x: -40,
       filter: "blur(4px)",
-      transition: { duration: 0.3, ease: "easeIn" },
+      transition: { duration: 0.25, ease: "easeIn" as const },
     },
   };
 
@@ -114,30 +114,22 @@ export function ValuatorWizard() {
       {/* Progress Header */}
       {step < 4 && (
         <div className="mb-10 px-2 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center">
-                <div
-                  className={`size-8 rounded-full flex items-center justify-center font-jakarta font-bold text-sm transition-all duration-500 ${step >= i ? "bg-df-trust-blue text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-slate-200 dark:bg-slate-800 text-slate-400"}`}
-                >
-                  {step > i ? <CheckCircle2 className="size-4" /> : i}
-                </div>
-                {i < 3 && (
-                  <div
-                    className={`w-12 h-1 rounded-full mx-2 transition-all duration-500 ${step > i ? "bg-df-trust-blue" : "bg-slate-200 dark:bg-slate-800"}`}
-                  />
-                )}
-              </div>
-            ))}
+          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-4">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--df-gold))] to-trust shadow-[0_0_8px_rgba(212,175,55,0.3)]"
+              initial={{ width: "33.33%" }}
+              animate={{ width: `${(step / 3) * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            />
           </div>
-          <div className="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 font-jakarta uppercase tracking-widest gap-2">
+          <div className="flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest gap-2">
             <Lock className="size-3" />
-            Vaši podaci su 100% povjerljivi
+            Vaši podaci su 100% povjerljivi — Korak {step} od 3
           </div>
         </div>
       )}
 
-      <GlowCard className="w-full bg-white/70 dark:bg-[#0B1120]/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl relative overflow-hidden rounded-[2rem]">
+      <GlowCard className="w-full bg-card/80 backdrop-blur-2xl border border-white/[0.06] shadow-glass relative overflow-hidden rounded-[2rem]">
         <div className="pt-10 px-8 sm:px-12 relative z-10 min-h-100 flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {/* STEP 1: INDUSTRY */}
@@ -167,13 +159,13 @@ export function ValuatorWizard() {
                       onClick={() =>
                         setFormData({ ...formData, industry: ind.id })
                       }
-                      className={`cursor-pointer border p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 ${formData.industry === ind.id ? "border-df-trust-blue bg-df-trust-blue/5 shadow-[0_0_20px_rgba(37,99,235,0.15)] ring-1 ring-df-trust-blue" : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                      className={`cursor-pointer border p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 ${formData.industry === ind.id ? "border-trust bg-trust/10 shadow-[0_0_20px_rgba(37,99,235,0.15)] ring-1 ring-trust" : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"}`}
                     >
                       <ind.icon
-                        className={`size-8 ${formData.industry === ind.id ? "text-df-trust-blue" : "text-slate-400 dark:text-slate-500"}`}
+                        className={`size-8 ${formData.industry === ind.id ? "text-blue-400" : "text-slate-500"}`}
                       />
                       <span
-                        className={`text-sm font-semibold text-center ${formData.industry === ind.id ? "text-df-trust-blue" : "text-slate-700 dark:text-slate-300"}`}
+                        className={`text-sm font-semibold text-center ${formData.industry === ind.id ? "text-blue-400" : "text-slate-300"}`}
                       >
                         {ind.label}
                       </span>
@@ -426,13 +418,13 @@ export function ValuatorWizard() {
                   M&A transakcijama u sektoru.
                 </p>
 
-                <div className="w-64 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-64 h-2 bg-white/5 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-linear-to-r from-df-trust-blue to-blue-400 transition-all duration-75"
+                    className="h-full bg-gradient-to-r from-trust to-blue-400 rounded-full shadow-[0_0_8px_rgba(37,99,235,0.4)] transition-all duration-75"
                     style={{ width: `${loadingProgress}%` }}
                   />
                 </div>
-                <div className="mt-3 text-sm font-mono text-df-trust-blue font-bold">
+                <div className="mt-3 text-sm font-mono text-blue-400 font-bold">
                   {loadingProgress}%
                 </div>
               </motion.div>
@@ -507,7 +499,7 @@ export function ValuatorWizard() {
 
         {/* Footer Navigation */}
         {step < 4 && (
-          <div className="flex justify-between items-center p-6 sm:px-12 border-t border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-black/20 relative z-10">
+          <div className="flex justify-between items-center p-6 sm:px-12 border-t border-white/[0.06] bg-white/[0.02] relative z-10">
             <Button
               variant="outline"
               onClick={handlePrev}

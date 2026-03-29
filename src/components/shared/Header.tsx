@@ -17,7 +17,13 @@ const mobileMenuVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { staggerChildren: 0.06, when: "beforeChildren" },
+    transition: {
+      type: "spring" as const,
+      damping: 25,
+      stiffness: 300,
+      staggerChildren: 0.06,
+      when: "beforeChildren" as const,
+    },
   },
   exit: { opacity: 0, y: -20, transition: { duration: 0.2 } },
 };
@@ -31,21 +37,26 @@ const mobileLinkVariants = {
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${isScrolled ? "bg-slate-950/70 backdrop-blur-xl border-b border-white/10 shadow-glass py-3" : "bg-transparent py-5"}`}
+      className={`fixed top-0 z-50 w-full transition-all duration-500 ${
+        isScrolled
+          ? "bg-slate-950/60 backdrop-blur-2xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-2.5 mx-auto rounded-2xl mt-3 left-4 right-4 w-[calc(100%-2rem)]"
+          : "bg-transparent py-5"
+      }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo — scale + glow on hover */}
+        {/* Logo */}
         <Link
           href="/"
           className="font-heading text-2xl font-bold tracking-tight text-white flex items-center gap-2 group"
@@ -56,23 +67,33 @@ export function Header() {
           DealFlow
         </Link>
 
-        {/* Desktop Nav — animated gold underline on hover */}
+        {/* Desktop Nav — magnetic hover with sliding indicator */}
         <div className="hidden md:flex flex-1 justify-center">
-          <nav className="flex items-center gap-8 text-sm font-medium font-sans px-8 py-2 rounded-full border border-white/5 bg-white/5 backdrop-blur-md">
+          <nav
+            className="flex items-center gap-1 text-sm font-medium font-sans px-2 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl"
+            onMouseLeave={() => setHoveredLink(null)}
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="relative text-slate-300 hover:text-white transition-colors py-1 group/link"
+                className="relative text-slate-300 hover:text-white transition-colors px-5 py-2 rounded-full"
+                onMouseEnter={() => setHoveredLink(link.href)}
               >
-                {link.label}
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gold rounded-full origin-left scale-x-0 group-hover/link:scale-x-100 transition-transform duration-300" />
+                {hoveredLink === link.href && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute inset-0 rounded-full bg-white/[0.08]"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{link.label}</span>
               </Link>
             ))}
           </nav>
         </div>
 
-        {/* Desktop CTA — btn-shimmer applied */}
+        {/* Desktop CTA — idle glow pulse */}
         <div className="hidden md:flex items-center gap-4">
           <Link
             href="/login"
@@ -81,14 +102,14 @@ export function Header() {
             Prijava
           </Link>
           <Link href="/valuate">
-            <Button className="btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading px-6 shadow-[0_0_15px_rgba(201,165,80,0.3)] hover:shadow-[0_0_25px_rgba(201,165,80,0.5)] transition-all border-none group">
+            <Button className="btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading px-6 shadow-[0_0_15px_rgba(201,165,80,0.3)] hover:shadow-[0_0_25px_rgba(201,165,80,0.5)] transition-all border-none group animate-[glow-pulse_3s_ease-in-out_infinite]">
               Procijeni vrijednost
               <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
 
-        {/* Mobile hamburger — with aria */}
+        {/* Mobile hamburger */}
         <button
           className="md:hidden text-white"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
