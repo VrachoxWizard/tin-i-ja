@@ -14,9 +14,9 @@ export default function BuyPage() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         {/* Ambient background */}
-        <div className="absolute inset-0 bg-navy" />
-        <div className="absolute top-[-20%] right-[-10%] w-125 h-125 bg-trust/15 rounded-full blur-[140px] gpu-layer" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-100 h-100 bg-gold/10 rounded-full blur-[120px] gpu-layer" />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute top-[-20%] right-[-10%] w-[120vw] h-[120vh] bg-primary/5 rounded-none blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[100vw] h-[100vh] bg-primary/5 rounded-none blur-[120px] pointer-events-none" />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -26,18 +26,18 @@ export default function BuyPage() {
         />
 
         <div className="container relative z-10 mx-auto px-4 max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium tracking-wide mb-8 backdrop-blur-sm">
-            <span className="w-2 h-2 rounded-full bg-trust shadow-[0_0_8px_rgba(37,99,235,0.8)]" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-none bg-white/5 border border-white/10 text-foreground text-sm font-medium tracking-widest uppercase mb-8 backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-none bg-primary shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
             Investitorski Portal
           </div>
 
           <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
             Postanite DealFlow{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-trust via-blue-400 to-indigo-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/50">
               Investitor
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12">
+          <p className="text-lg md:text-xl text-muted-foreground font-sans max-w-2xl mx-auto leading-relaxed mb-12">
             Registrirajte svoje investicijske kriterije. Naš algoritam
             automatski će vas spojiti s visoko profitabilnim i provjerenim
             tvrtkama na hrvatskom tržištu.
@@ -52,10 +52,10 @@ export default function BuyPage() {
             ].map(({ icon: Icon, label }) => (
               <div
                 key={label}
-                className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+                className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-none bg-white/[0.02] border border-white/10 backdrop-blur-sm"
               >
-                <Icon className="w-4 h-4 text-gold" />
-                <span className="text-sm text-slate-300 font-medium">
+                <Icon className="w-4 h-4 text-primary" />
+                <span className="text-sm text-foreground font-medium">
                   {label}
                 </span>
               </div>

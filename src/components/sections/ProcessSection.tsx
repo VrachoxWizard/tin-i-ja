@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, Variants } from "framer-motion";
+import { motion, useReducedMotion, Variants, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { SectionShell } from "@/components/shared/SectionShell";
 import { processSteps } from "@/data/homepage";
 
@@ -9,37 +10,53 @@ const fadeUp: Variants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 1.0, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
 export function ProcessSection() {
   const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"],
+  });
+
+  const scaleY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   return (
-    <SectionShell spacing="none" className="py-24 md:py-40 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8">
+    <SectionShell spacing="none" className="py-24 md:py-40 bg-background relative border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-12">
           
           {/* Header left side */}
-          <div className="lg:col-span-5 lg:sticky lg:top-32 self-start">
-            <p className="text-sm tracking-[0.2em] text-gold font-semibold uppercase mb-8 flex items-center gap-4">
-              <span className="w-8 h-px bg-gold shadow-[0_0_10px_rgba(229,192,123,0.5)]" />
+          <div className="lg:col-span-5 lg:sticky lg:top-40 self-start">
+            <p className="text-[0.7rem] tracking-[0.25em] text-primary font-medium uppercase mb-8 flex items-center gap-4">
+              <span className="w-12 h-[1px] bg-primary/70" />
               Proces
             </p>
-            <h2 className="text-4xl md:text-5xl lg:text-7xl font-heading text-white mb-8 leading-[1.05]">
-              Kako funkcionira
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading text-foreground mb-8 leading-[1.05] tracking-tighter">
+              Kako to <span className="italic font-light text-muted-foreground">funkcionira</span>.
             </h2>
-            <p className="text-slate-400 text-lg md:text-xl font-light leading-relaxed">
-              Četiri strukturirana koraka od inicijalne procjene do uspješne transakcije. Jasan, transparentan i siguran put.
+            <p className="text-muted-foreground text-lg font-light leading-relaxed tracking-wide">
+              Četiri strukturirana koraka od inicijalne evaluacije do uspješne transakcije. Jasan, transparentan i diskretan put.
             </p>
           </div>
 
           {/* Steps right side */}
-          <div className="lg:col-span-6 lg:col-start-7">
-            <div className="space-y-12 md:space-y-24 relative">
-              {/* Connecting vertical line */}
-              <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px bg-white/5" />
+          <div className="lg:col-span-7" ref={containerRef}>
+            <div className="space-y-16 md:space-y-32 relative">
+              {/* Connecting vertical line (Background) */}
+              <div className="absolute left-6 md:left-8 top-4 bottom-4 w-px bg-white/5" />
+              
+              {/* Connecting vertical line (Illuminated) */}
+              {!prefersReducedMotion && (
+                <motion.div 
+                  className="absolute left-6 md:left-8 top-4 bottom-4 w-px bg-primary origin-top shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                  style={{ scaleY }}
+                />
+              )}
 
               {processSteps.map((step, i) => {
                 const Icon = step.icon;
@@ -50,23 +67,23 @@ export function ProcessSection() {
                     variants={prefersReducedMotion ? undefined : fadeUp}
                     initial={prefersReducedMotion ? undefined : "hidden"}
                     whileInView={prefersReducedMotion ? undefined : "visible"}
-                    viewport={{ once: true, margin: "-100px" }}
+                    viewport={{ once: true, margin: "-150px" }}
                     className="relative flex gap-8 md:gap-12 group"
                   >
                     <div className="relative z-10 flex flex-col items-center">
-                      <div className="size-12 md:size-16 rounded-full bg-[#050A15] border border-white/10 flex items-center justify-center shrink-0 group-hover:border-gold/50 transition-colors duration-500">
-                        <Icon className="size-5 md:size-6 text-gold/70 group-hover:text-gold transition-colors duration-500" strokeWidth={2} />
+                      <div className="size-12 md:size-16 rounded-full bg-card border border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary/50 transition-all duration-700 shadow-xl">
+                        <Icon className="size-5 md:size-6 text-muted-foreground group-hover:text-primary transition-colors duration-700" strokeWidth={1.5} />
                       </div>
                     </div>
                     
                     <div className="pt-2 md:pt-4">
-                      <div className="text-gold text-xs font-bold tracking-[0.15em] uppercase mb-4">
+                      <div className="text-primary/70 text-[0.65rem] font-bold tracking-[0.25em] uppercase mb-4">
                         Faza 0{i + 1}
                       </div>
-                      <h3 className="font-heading text-2xl md:text-3xl text-white mb-4 leading-tight">
+                      <h3 className="font-heading text-2xl md:text-4xl text-foreground mb-4 leading-tight tracking-tight">
                         {step.title}
                       </h3>
-                      <p className="text-slate-200 font-light leading-relaxed text-base md:text-lg">
+                      <p className="text-muted-foreground font-light leading-relaxed text-base md:text-lg">
                         {step.desc}
                       </p>
                     </div>

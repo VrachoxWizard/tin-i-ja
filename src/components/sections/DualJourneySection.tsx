@@ -3,110 +3,108 @@ import { Button } from "@/components/ui/button";
 import { SectionShell } from "@/components/shared/SectionShell";
 import { sellerBenefits, buyerBenefits } from "@/data/homepage";
 import { ArrowRight, Check } from "lucide-react";
+import Image from "next/image";
 
 export function DualJourneySection() {
   return (
-    <SectionShell spacing="none" className="py-24 md:py-32">
-      <div className="text-center mb-20 px-4">
-        <p className="text-sm tracking-[0.2em] text-gold font-semibold uppercase mb-6 flex items-center justify-center gap-4">
-          <span className="w-8 h-px bg-gold" />
+    <section className="w-full bg-background pt-24 pb-0 md:pt-32">
+      <div className="text-center mb-16 md:mb-24 px-4 max-w-4xl mx-auto">
+        <p className="text-[0.7rem] tracking-[0.25em] text-primary font-medium uppercase mb-6 flex items-center justify-center gap-4">
+          <span className="w-12 h-[1px] bg-primary/70" />
           Dva puta, jedan cilj
-          <span className="w-8 h-px bg-gold" />
+          <span className="w-12 h-[1px] bg-primary/70" />
         </p>
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading text-white tracking-tight">
-          Prodajete ili kupujete?
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading text-foreground tracking-tighter leading-[1.1]">
+          Prodajete ili <span className="italic font-light text-muted-foreground pr-2">kupujete?</span>
         </h2>
       </div>
 
-      {/* Edge-to-edge container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+      {/* Edge-to-edge Split Door Container */}
+      <div className="flex flex-col lg:flex-row w-full min-h-[85vh] group/container border-y border-white/5">
+        
+        {/* Seller Panel */}
+        <div className="relative flex-1 bg-card overflow-hidden transition-all duration-700 ease-out group/panel border-b lg:border-b-0 lg:border-r border-white/5 lg:group-hover/container:[&:not(:hover)]:opacity-40">
+          <div className="absolute inset-0 transition-opacity duration-1000 opacity-30 group-hover/panel:opacity-100">
+             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
+             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-background/50 to-transparent z-10" />
+          </div>
           
-          {/* Seller Panel */}
-          <div className="relative group rounded-2xl overflow-hidden bg-[#0A1220] border border-white/5 transition-all duration-700 hover:border-gold/30">
-            {/* Subtle background glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            
-            <div className="relative z-10 p-10 md:p-14 h-full flex flex-col">
-              <div className="mb-12">
-                <span className="inline-block px-4 py-1.5 rounded-full border border-gold/40 text-gold text-xs font-bold tracking-[0.15em] uppercase mb-8">
-                  Za Prodavatelje
-                </span>
-                <h3 className="font-heading text-3xl md:text-4xl leading-[1.1] text-white mb-6">
-                  Prodajte svoju tvrtku diskretno i po pravoj tržišnoj vrijednosti.
-                </h3>
-                <p className="text-slate-200 font-light leading-relaxed">
-                  Maksimizirajte svoj izlaz. Povezujemo vas isključivo s verificiranim, ozbiljnim investitorima uz 100% anonimnost i NDA zaštitu.
-                </p>
-              </div>
+          <div className="relative z-20 p-6 md:p-12 lg:p-20 h-full flex flex-col justify-end">
+            <div className="mb-12">
+              <span className="inline-block px-4 py-1.5 rounded-none border border-primary/40 text-primary text-[0.65rem] font-bold tracking-[0.2em] uppercase mb-8 bg-background/50 backdrop-blur-md">
+                Za Prodavatelje
+              </span>
+              <h3 className="font-heading text-3xl md:text-5xl leading-[1.05] text-foreground mb-6 tracking-tighter">
+                Prodajte svoju tvrtku diskretno i po pravoj <span className="italic font-light">tržišnoj vrijednosti</span>.
+              </h3>
+              <p className="text-muted-foreground font-light leading-relaxed max-w-md text-lg">
+                Maksimizirajte svoj izlaz. Povezujemo vas isključivo s verificiranim, ozbiljnim investitorima uz 100% anonimnost i NDA zaštitu.
+              </p>
+            </div>
 
-              <ul className="space-y-5 mb-16 flex-1">
+            <div>
+              <ul className="space-y-4 mb-12">
                 {sellerBenefits.map((benefit) => (
-                  <li
-                    key={benefit}
-                    className="flex items-start gap-4 text-slate-300 font-light"
-                  >
-                    <div className="mt-1 size-5 rounded-full border border-gold/30 flex items-center justify-center shrink-0">
-                      <Check className="size-3 text-gold" strokeWidth={2} />
-                    </div>
+                  <li key={benefit} className="flex items-start gap-4 text-slate-300 font-light text-sm md:text-base">
+                    <div className="mt-1 size-1.5 rounded-full bg-primary/70 shrink-0" />
                     <span className="leading-relaxed">{benefit}</span>
                   </li>
                 ))}
               </ul>
               
-              <Link href="/valuate" className="mt-auto">
-                <Button className="w-full sm:w-auto h-14 bg-white text-background hover:bg-gold hover:text-white rounded-full px-8 text-sm font-bold tracking-[0.1em] uppercase transition-all duration-500">
+              <Link href="/valuate">
+                <Button className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none px-8 text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all duration-500">
                   Procijeni vrijednost
                 </Button>
               </Link>
             </div>
           </div>
+        </div>
 
-          {/* Buyer Panel */}
-          <div className="relative group rounded-2xl overflow-hidden bg-[#0A1220] border border-white/5 transition-all duration-700 hover:border-trust/30">
-            {/* Subtle background glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-trust/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            
-            <div className="relative z-10 p-10 md:p-14 h-full flex flex-col">
-              <div className="mb-12">
-                <span className="inline-block px-4 py-1.5 rounded-full border border-trust/40 text-blue-400 text-xs font-bold tracking-[0.15em] uppercase mb-8">
-                  Za Investitore
-                </span>
-                <h3 className="font-heading text-3xl md:text-4xl leading-[1.1] text-white mb-6">
-                  Pristupite verificiranim akvizicijskim prilikama u regiji.
-                </h3>
-                <p className="text-slate-200 font-light leading-relaxed">
-                  Skenirajte tržište s preciznošću. Standardizirani financijski podatci i direktan kontakt s umreženim vlasnicima.
-                </p>
-              </div>
+        {/* Buyer Panel */}
+        <div className="relative flex-1 bg-card overflow-hidden transition-all duration-700 ease-out group/panel lg:group-hover/container:[&:not(:hover)]:opacity-40">
+          <div className="absolute inset-0 transition-opacity duration-1000 opacity-30 group-hover/panel:opacity-100">
+             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
+             <div className="absolute inset-0 bg-gradient-to-l from-secondary/10 via-background/50 to-transparent z-10" />
+          </div>
+          
+          <div className="relative z-20 p-6 md:p-12 lg:p-20 h-full flex flex-col justify-end">
+            <div className="mb-12">
+              <span className="inline-block px-4 py-1.5 rounded-none border border-secondary/40 text-secondary-foreground text-[0.65rem] font-bold tracking-[0.2em] uppercase mb-8 bg-background/50 backdrop-blur-md">
+                Za Investitore
+              </span>
+              <h3 className="font-heading text-3xl md:text-5xl leading-[1.05] text-foreground mb-6 tracking-tighter">
+                Pristupite verificiranim <span className="italic font-light text-muted-foreground pr-2">akvizicijskim prilikama</span> u regiji.
+              </h3>
+              <p className="text-muted-foreground font-light leading-relaxed max-w-md text-lg">
+                Skenirajte tržište s preciznošću. Standardizirani financijski podatci i direktan kontakt s umreženim vlasnicima.
+              </p>
+            </div>
 
-              <ul className="space-y-5 mb-16 flex-1">
+            <div>
+              <ul className="space-y-4 mb-12">
                 {buyerBenefits.map((benefit) => (
-                  <li
-                    key={benefit}
-                    className="flex items-start gap-4 text-slate-300 font-light"
-                  >
-                    <div className="mt-1 size-5 rounded-full border border-trust/30 flex items-center justify-center shrink-0">
-                      <Check className="size-3 text-blue-400" strokeWidth={2} />
-                    </div>
+                  <li key={benefit} className="flex items-start gap-4 text-slate-300 font-light text-sm md:text-base">
+                    <div className="mt-1 size-1.5 rounded-full bg-secondary/70 shrink-0" />
                     <span className="leading-relaxed">{benefit}</span>
                   </li>
                 ))}
               </ul>
               
-              <Link href="/listings" className="mt-auto">
+              <Link href="/listings" className="group/btn">
                 <Button
                   variant="outline"
-                  className="w-full sm:w-auto h-14 bg-transparent border-white/20 text-white hover:bg-white hover:text-background rounded-full px-8 text-sm font-bold tracking-[0.1em] uppercase transition-all duration-500"
+                  className="h-14 bg-surface-glass backdrop-blur-md border-border text-foreground hover:bg-white/5 hover:border-muted-foreground/40 rounded-none px-8 text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all duration-500"
                 >
                   Pregledaj prilike
+                  <span className="ml-3 transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
                 </Button>
               </Link>
             </div>
           </div>
-
         </div>
+
       </div>
-    </SectionShell>
+    </section>
   );
 }

@@ -49,22 +49,32 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full transition-all duration-500 ${
+      className={`fixed top-0 z-50 w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isScrolled
-          ? "bg-slate-950/60 backdrop-blur-2xl border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-2.5 mx-auto rounded-2xl mt-3 left-4 right-4 w-[calc(100%-2rem)]"
-          : "bg-transparent py-5"
+          ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-2.5 mx-auto rounded-full mt-4 left-0 right-0 max-w-4xl"
+          : "bg-transparent py-6"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className={`mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 ${isScrolled ? "max-w-4xl" : "max-w-7xl"}`}>
         {/* Logo */}
         <Link
           href="/"
-          className="font-heading text-2xl font-bold tracking-tight text-white flex items-center gap-2 group"
+          className="flex items-center gap-4 group"
         >
-          <div className="size-8 rounded-lg bg-linear-to-br from-trust to-blue-700 flex items-center justify-center shadow-lg group-hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-all duration-300 border border-white/10">
-            <span className="text-white text-sm font-bold pl-[1px]">D</span>
+          {/* Minimalist Geometric Mark */}
+          <div className="relative size-8 flex items-center justify-center overflow-hidden border border-primary/50 group-hover:border-primary transition-colors duration-500">
+            <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+            <span className="font-heading text-primary text-[0.65rem] tracking-widest pl-[1px]">DF</span>
           </div>
-          DealFlow
+          {/* Typographic Name */}
+          <div className="flex flex-col">
+            <span className="font-heading text-lg font-bold tracking-[0.1em] text-foreground leading-none">
+              DEALFLOW
+            </span>
+            <span className="text-[0.45rem] tracking-[0.3em] text-muted-foreground uppercase leading-none mt-1.5 opacity-80">
+              Advisory
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav — magnetic hover with sliding indicator */}
@@ -93,18 +103,17 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Desktop CTA — idle glow pulse */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center gap-6">
           <Link
             href="/login"
-            className="font-sans text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+            className="font-sans text-[0.75rem] font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
           >
             Prijava
           </Link>
           <Link href="/valuate">
-            <Button className="btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading px-6 shadow-[0_0_15px_rgba(201,165,80,0.3)] hover:shadow-[0_0_25px_rgba(201,165,80,0.5)] transition-all border-none group animate-[glow-pulse_6s_ease-in-out_infinite]">
-              Procijeni vrijednost
-              <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-none px-6 text-[0.7rem] font-bold tracking-[0.2em] uppercase transition-all duration-300 h-10">
+              Procjena
             </Button>
           </Link>
         </div>
@@ -160,10 +169,10 @@ export function Header() {
                 <Link
                   href="/valuate"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="pt-2 block"
+                  className="pt-4 block"
                 >
-                  <Button className="w-full btn-shimmer bg-gold text-slate-950 hover:bg-gold/90 rounded-full font-heading shadow-[0_0_15px_rgba(201,165,80,0.3)] border-none">
-                    Procijeni vrijednost
+                  <Button className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all duration-300">
+                    Besplatna Procjena
                   </Button>
                 </Link>
               </motion.div>

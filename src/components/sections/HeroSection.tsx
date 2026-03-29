@@ -5,14 +5,15 @@ import Image from "next/image";
 import { motion, useReducedMotion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
+const slowExposure: Variants = {
+  hidden: { opacity: 0, filter: "blur(10px)", y: 20 },
   visible: (i: number) => ({
     opacity: 1,
+    filter: "blur(0px)",
     y: 0,
     transition: {
-      duration: 1.0,
-      delay: i * 0.15,
+      duration: 1.8,
+      delay: i * 0.2,
       ease: [0.16, 1, 0.3, 1] as const,
     },
   }),
@@ -23,11 +24,11 @@ export function HeroSection() {
   const motionProps = (i: number) =>
     prefersReducedMotion
       ? {}
-      : { variants: fadeUp, initial: "hidden", animate: "visible", custom: i };
+      : { variants: slowExposure, initial: "hidden", animate: "visible", custom: i };
 
   return (
-    <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden bg-background w-full">
-      {/* Background Image with Cinematic Overlay */}
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background w-full">
+      {/* Cinematic Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero_background_1774797313751.png"
@@ -35,60 +36,64 @@ export function HeroSection() {
           fill
           sizes="100vw"
           priority
-          className="object-cover object-center opacity-30"
+          className="object-cover object-center opacity-40 mix-blend-luminosity scale-105"
           quality={90}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/80 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent md:w-3/4" />
+        {/* Gradients to create atmospheric vignette and shadow play */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/60 to-background z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent w-full md:w-4/5 lg:w-2/3 z-10" />
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
-        <div className="max-w-3xl">
-          {/* Eyebrow */}
-          <motion.div {...motionProps(0)} className="mb-10">
-            <span className="inline-flex items-center gap-4 text-gold text-xs font-semibold tracking-[0.2em] uppercase">
-              <span className="w-10 h-px bg-gold shadow-[0_0_10px_rgba(229,192,123,0.5)]" />
-              Institucionalno M&A Savjetovanje
-            </span>
-          </motion.div>
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-28 md:pt-32 pb-16 md:pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 xl:col-span-7 flex flex-col justify-center">
+            {/* Eyebrow */}
+            <motion.div {...motionProps(0)} className="mb-12">
+              <div className="inline-flex items-center gap-4 text-primary text-[0.7rem] font-medium tracking-[0.25em] uppercase">
+                <span className="w-12 h-[1px] bg-primary/70" />
+                Institucionalno M&A Savjetovanje
+              </div>
+            </motion.div>
 
-          {/* Headline - Editorial Serif */}
-          <motion.h1
-            {...motionProps(1)}
-            className="text-5xl md:text-6xl lg:text-[5.5rem] font-heading text-white mb-8 leading-[1.1]"
-          >
-            Maksimizirajte <br />
-            <span className="text-white/70 italic font-light leading-[1.15]">vrijednost</span> vašeg poslovanja.
-          </motion.h1>
+            {/* Headline - Editorial Serif */}
+            <motion.h1
+              {...motionProps(1)}
+              className="text-4xl md:text-6xl lg:text-7xl font-heading text-foreground mb-8 leading-[1.05] tracking-tighter"
+            >
+              Maksimizirajte <br />
+              <span className="text-muted-foreground italic font-light pr-2">vrijednost</span> vašeg poslovanja.
+            </motion.h1>
 
-          {/* Subheadline - Clean Sans */}
-          <motion.p
-            {...motionProps(2)}
-            className="text-lg md:text-xl text-slate-400 mb-12 max-w-xl leading-relaxed font-light"
-          >
-            Ekskluzivna platforma koja diskretno povezuje vlasnike tvrtki s provjerenim investitorima na hrvatskom tržištu.
-          </motion.p>
+            {/* Subheadline - Clean Sans */}
+            <motion.p
+              {...motionProps(2)}
+              className="text-lg md:text-xl text-muted-foreground mb-14 max-w-xl leading-relaxed font-light tracking-wide"
+            >
+              Ekskluzivna platforma koja diskretno povezuje vlasnike tvrtki s dokapitaliziranim investitorima na hrvatskom tržištu. Nema kompromisa.
+            </motion.p>
 
-          {/* CTAs */}
-          <motion.div
-            {...motionProps(3)}
-            className="flex flex-col sm:flex-row items-center gap-5"
-          >
-            <Link href="/valuate" className="w-full sm:w-auto">
-              <Button className="w-full h-14 bg-gold text-background hover:bg-white rounded-full px-10 text-sm font-bold tracking-[0.15em] uppercase transition-all duration-500 shadow-[0_0_20px_rgba(229,192,123,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)]">
-                Besplatna procjena
-              </Button>
-            </Link>
+            {/* CTAs */}
+            <motion.div
+              {...motionProps(3)}
+              className="flex flex-col sm:flex-row items-center gap-6"
+            >
+              <Link href="/valuate" className="w-full sm:w-auto">
+                <Button className="w-full h-12 md:h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none px-10 text-[0.8rem] font-medium tracking-[0.2em] uppercase transition-all duration-300">
+                  Besplatna procjena
+                </Button>
+              </Link>
 
-            <Link href="/listings" className="w-full sm:w-auto">
-              <Button
-                variant="outline"
-                className="w-full h-14 bg-transparent border-white/20 text-white hover:bg-white/5 hover:border-white/40 rounded-full px-10 text-sm font-medium tracking-[0.1em] uppercase transition-all duration-500"
-              >
-                Istraži prilike
-              </Button>
-            </Link>
-          </motion.div>
+              <Link href="/listings" className="w-full sm:w-auto group">
+                <Button
+                  variant="outline"
+                  className="w-full h-12 md:h-14 bg-surface-glass backdrop-blur-md border-border text-foreground hover:bg-white/5 hover:border-muted-foreground/40 rounded-none px-10 text-[0.8rem] font-medium tracking-[0.2em] uppercase transition-all duration-300"
+                >
+                  Istraži prilike
+                  <span className="ml-3 transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>

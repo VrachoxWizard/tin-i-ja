@@ -4,46 +4,43 @@ import { EyeOff, Bot, Handshake } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Prodajte Tvrtku | DealFlow",
-  description: "Započnite proces prodaje vaše tvrtke diskretno i sigurno.",
+  description: "Započnite proces prodaje vaše tvrtke diskretno i sigurno.",
 };
 
 export default function SellPage() {
   return (
     <div className="flex flex-col bg-background">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Ambient background */}
-        <div className="absolute inset-0 bg-navy" />
-        <div className="absolute top-[-15%] left-[-10%] w-125 h-125 bg-gold/15 rounded-full blur-[140px] gpu-layer" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-100 h-100 bg-trust/10 rounded-full blur-[120px] gpu-layer" />
+      <section className="relative pt-40 pb-20 overflow-hidden">
+        {/* Subtle structural grid */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.02]"
           style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
+            backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
           }}
         />
 
         <div className="container relative z-10 mx-auto px-4 max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium tracking-wide mb-8 backdrop-blur-sm">
-            <span className="w-2 h-2 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+          <div className="inline-flex items-center gap-4 px-4 py-1.5 border border-white/10 text-muted-foreground text-[0.65rem] font-bold uppercase tracking-[0.2em] mb-12">
+            <span className="w-1.5 h-1.5 bg-primary" />
             Portal za Prodavatelje
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
-            Započnite prodaju{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-gold via-yellow-200 to-gold">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-foreground mb-8 leading-[1.05] tracking-tighter">
+            Započnite prodaju{" "}
+            <span className="italic font-light text-muted-foreground pr-2">
               tvrtke
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-20 tracking-wide font-light">
             Unesite podatke o vašoj tvrtki. Vaši stvarni podaci ostat će tajni
             sve do potpisivanja NDA ugovora. Naša AI tehnologija automatski će
-            kreirati anonimni teaser.
+            kreirati anonimni teaser i detektirati odgovarajuće investitore.
           </p>
 
           {/* 3-Step Visual Preview */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/5 border border-white/5 p-px">
             {[
               { icon: EyeOff, label: "Anonimni Teaser", step: "01" },
               { icon: Bot, label: "AI Procjena", step: "02" },
@@ -51,13 +48,13 @@ export default function SellPage() {
             ].map(({ icon: Icon, label, step }) => (
               <div
                 key={label}
-                className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm group"
+                className="flex flex-col items-center justify-center gap-4 px-6 py-10 bg-card group transition-colors hover:bg-card/80"
               >
-                <span className="text-xs text-gold/60 font-heading font-bold">
+                <span className="text-[0.6rem] text-primary font-bold tracking-widest">
                   {step}
                 </span>
-                <Icon className="w-4 h-4 text-gold" />
-                <span className="text-sm text-slate-300 font-medium">
+                <Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-500" strokeWidth={1} />
+                <span className="text-sm text-foreground font-light tracking-wide">
                   {label}
                 </span>
               </div>
@@ -67,8 +64,8 @@ export default function SellPage() {
       </section>
 
       {/* Form Section */}
-      <section className="relative -mt-6 pb-20">
-        <div className="container mx-auto px-4 max-w-4xl">
+      <section className="relative pb-24">
+        <div className="container mx-auto px-4 max-w-3xl">
           <SellerOnboardingForm />
         </div>
       </section>

@@ -95,7 +95,7 @@ export function BuyerOnboardingForm() {
 
   if (isSuccess) {
     return (
-      <Card className="border-df-trust-blue/20 bg-white/5 dark:bg-slate-900/40 backdrop-blur-xl shadow-glass max-w-2xl mx-auto text-center py-12 rounded-2xl relative overflow-hidden">
+      <Card className="border-white/10 bg-white/[0.02] border shadow-none max-w-2xl mx-auto text-center py-12 rounded-none relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
@@ -108,15 +108,15 @@ export function BuyerOnboardingForm() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="p-5 bg-df-trust-blue/10 rounded-full text-df-trust-blue mb-2 ring-1 ring-df-trust-blue/20"
+            className="p-5 bg-primary/10 rounded-none text-primary mb-2 ring-1 ring-primary/20"
           >
             <CheckCircle className="w-12 h-12" />
           </motion.div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-jakarta tracking-tight">
+            <h2 className="text-3xl font-bold text-foreground font-heading tracking-tight">
               Profil Spremljen!
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 font-inter max-w-md mx-auto leading-relaxed">
+            <p className="text-muted-foreground font-sans max-w-md mx-auto leading-relaxed">
               Vaši investicijski kriteriji su uspješno dodani u naš DealFlow
               Algoritam. Sada ste automatski povezani s oglasima koji odgovaraju
               vašem profilu.
@@ -124,7 +124,7 @@ export function BuyerOnboardingForm() {
           </div>
           <Button
             variant="default"
-            className="mt-6 bg-df-trust-blue hover:bg-df-trust-blue/90 text-white font-jakarta rounded-xl shadow-lg hover:shadow-xl transition-all h-12 px-8"
+            className="mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-heading rounded-none h-12 px-8"
             onClick={() => (window.location.href = "/listings")}
           >
             Pregledaj Tvrtke (Listings)
@@ -135,14 +135,14 @@ export function BuyerOnboardingForm() {
   }
 
   return (
-    <Card className="border-white/[0.06] bg-card/80 backdrop-blur-xl shadow-glass relative overflow-hidden rounded-2xl">
+    <Card className="border-white/10 bg-white/[0.02] border shadow-none relative overflow-hidden rounded-none">
       {/* Decorative gradients */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-trust/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-[hsl(var(--df-gold))]/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
       <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5 z-20 rounded-t-2xl overflow-hidden">
         <motion.div
-          className="h-full bg-gradient-to-r from-[hsl(var(--df-gold))] to-trust rounded-full shadow-[0_0_8px_rgba(212,175,55,0.3)]"
+          className="h-full bg-primary"
           initial={{ width: "33.33%" }}
           animate={{ width: `${(step / 3) * 100}%` }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -154,7 +154,7 @@ export function BuyerOnboardingForm() {
           <Target className="w-4 h-4" />
           Pametni Algoritam
         </div>
-        <CardTitle className="text-3xl font-bold text-slate-900 dark:text-white font-jakarta tracking-tight">
+        <CardTitle className="text-3xl font-bold text-foreground font-heading tracking-tight">
           Korak {step} od 3
         </CardTitle>
         <CardDescription className="text-base text-slate-500 dark:text-slate-400 font-inter mt-1">
@@ -175,7 +175,7 @@ export function BuyerOnboardingForm() {
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
                     Tip Investitora
                   </Label>
                   <Select
@@ -185,25 +185,25 @@ export function BuyerOnboardingForm() {
                     }
                     required
                   >
-                    <SelectTrigger className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter">
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
                       <SelectValue placeholder="Odaberite tip" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-700 rounded-xl font-inter">
+                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
                       <SelectItem
                         value="individual"
-                        className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer"
+                        className="focus:bg-white/5 cursor-pointer rounded-none"
                       >
                         Fizička osoba / Individualni Poduzetnik
                       </SelectItem>
                       <SelectItem
                         value="strategic"
-                        className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer"
+                        className="focus:bg-white/5 cursor-pointer rounded-none"
                       >
                         Strateški Investitor (Tvrtka / Korporacija)
                       </SelectItem>
                       <SelectItem
                         value="financial"
-                        className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer"
+                        className="focus:bg-white/5 cursor-pointer rounded-none"
                       >
                         Financijski Investitor (PE / VC Fond)
                       </SelectItem>
@@ -213,7 +213,7 @@ export function BuyerOnboardingForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
                       Minimalna Investicija (EUR)
                     </Label>
                     <Input
@@ -223,11 +223,11 @@ export function BuyerOnboardingForm() {
                       onChange={handleChange}
                       required
                       placeholder="Npr. 50000"
-                      className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter"
+                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
                       Maksimalna Investicija (EUR)
                     </Label>
                     <Input
@@ -237,7 +237,7 @@ export function BuyerOnboardingForm() {
                       onChange={handleChange}
                       required
                       placeholder="Npr. 2000000"
-                      className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter"
+                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
                     />
                   </div>
                 </div>
@@ -254,7 +254,7 @@ export function BuyerOnboardingForm() {
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
                     Primarni Sektor Interesa
                   </Label>
                   <Select
@@ -264,15 +264,15 @@ export function BuyerOnboardingForm() {
                     }
                     required
                   >
-                    <SelectTrigger className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter">
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
                       <SelectValue placeholder="Odaberite industriju" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-700 rounded-xl font-inter">
+                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
                       {INDUSTRIES.map((i) => (
                         <SelectItem
                           key={i}
                           value={i}
-                          className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer"
+                          className="focus:bg-white/5 cursor-pointer rounded-none"
                         >
                           {i}
                         </SelectItem>
@@ -282,7 +282,7 @@ export function BuyerOnboardingForm() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
                     Primarna Regija
                   </Label>
                   <Select
@@ -292,15 +292,15 @@ export function BuyerOnboardingForm() {
                     }
                     required
                   >
-                    <SelectTrigger className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter">
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
                       <SelectValue placeholder="Odaberite regiju" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-700 rounded-xl font-inter">
+                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
                       {REGIONS.map((r) => (
                         <SelectItem
                           key={r}
                           value={r}
-                          className="focus:bg-slate-100 dark:focus:bg-slate-800 cursor-pointer"
+                          className="focus:bg-white/5 cursor-pointer rounded-none"
                         >
                           {r}
                         </SelectItem>
@@ -321,7 +321,7 @@ export function BuyerOnboardingForm() {
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
                     Investicijska Teza i Motivacija
                   </Label>
                   <Textarea
@@ -331,7 +331,7 @@ export function BuyerOnboardingForm() {
                     required
                     placeholder="Zašto kupujete tvrtku? (Npr. Širenje tržišnog udjela, akvizicija tehnologije, stabilan prihod za samostalan rad...)"
                     rows={5}
-                    className="resize-none bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all font-inter leading-relaxed"
+                    className="resize-none min-h-[120px] bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50 leading-relaxed p-4"
                   />
                   <p className="text-xs text-slate-500 font-medium">
                     Ova informacija pomaže prodavateljima da vas procijene prije
@@ -349,14 +349,14 @@ export function BuyerOnboardingForm() {
           variant="outline"
           onClick={handleBack}
           disabled={step === 1 || isLoading}
-          className="w-full sm:w-auto font-jakarta rounded-xl border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors h-12 px-6"
+          className="w-full sm:w-auto font-heading rounded-none border border-white/10 bg-transparent hover:bg-white/5 transition-colors h-12 px-6"
         >
           Natrag
         </Button>
         {step < 3 ? (
           <Button
             onClick={handleNext}
-            className="w-full sm:w-auto bg-df-navy hover:bg-df-navy/90 dark:bg-white dark:text-df-navy dark:hover:bg-slate-100 text-white font-jakarta rounded-xl shadow-md hover:shadow-lg transition-all h-12 px-6"
+            className="w-full sm:w-auto bg-foreground hover:bg-white/90 text-background font-heading rounded-none h-12 px-6"
           >
             Sljedeći Korak <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -364,7 +364,7 @@ export function BuyerOnboardingForm() {
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="w-full sm:w-auto bg-df-trust-blue hover:bg-df-trust-blue/90 text-white font-jakarta rounded-xl shadow-md hover:shadow-lg transition-all h-12 px-6"
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-heading rounded-none h-12 px-6"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
