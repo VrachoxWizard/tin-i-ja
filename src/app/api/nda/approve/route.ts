@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
-    const { nda_id, action } = await req.json(); // action can be 'approve' or 'reject'
-    const supabase = await createClient();
+    const { action } = await req.json(); // action can be 'approve' or 'reject'
+    // const supabase = await createClient();
 
     // Verify Auth in production for seller identity
     // const { data: { user } } = await supabase.auth.getUser();

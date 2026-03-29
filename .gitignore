@@ -40,6 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# agents and prompts
-.agent/
-prompt.md
+# agents and documentation
+/.agent/
+*.md
+![Rr][Ee][Aa][Dd][Mm][Ee].md

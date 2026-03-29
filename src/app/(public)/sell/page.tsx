@@ -20,7 +20,7 @@ export default function SellPage() {
             </h1>
             <p className="text-lg text-slate-600">
               Unesite podatke o vašoj tvrtki. Vaši stvarni podaci ostat će tajni sve do potpisivanja NDA ugovora.
-              Naša AI tehnologija automatski će kreirati anonimni "Slijepi Teaser" za zaštitu vaše privatnosti.
+              Naša AI tehnologija automatski će kreirati anonimni &quot;Slijepi Teaser&quot; za zaštitu vaše privatnosti.
             </p>
           </div>
           

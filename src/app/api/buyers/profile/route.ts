@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _req = req; // Keeps it accessible if needed later
   try {
-    const data = await req.json();
-    const supabase = await createClient();
+    // const data = await req.json();
+    // const supabase = await createClient();
 
     // Verification of Auth in production
     // const { data: { user } } = await supabase.auth.getUser();

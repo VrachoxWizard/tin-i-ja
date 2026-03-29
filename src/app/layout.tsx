@@ -3,6 +3,8 @@ import { Inter, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
+import { SmoothScroll } from "@/components/ui/SmoothScroll";
+import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -27,12 +29,15 @@ export default function RootLayout({
   return (
     <html
       lang="hr"
-      className={`${inter.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${inter.variable} ${dmSans.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        <main className="flex-1 flex flex-col">{children}</main>
-        <Footer />
+        <NoiseOverlay />
+        <SmoothScroll>
+          <Header />
+          <main className="flex-1 flex flex-col">{children}</main>
+          <Footer />
+        </SmoothScroll>
       </body>
     </html>
   );

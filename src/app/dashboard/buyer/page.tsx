@@ -1,10 +1,11 @@
 import { Metadata } from 'next';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { GlowCard } from '@/components/ui/GlowCard';
+import { CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Clock, Building2, ExternalLink } from 'lucide-react';
+import { FileText, Clock, Building2, ExternalLink, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -23,7 +24,7 @@ export default async function BuyerDashboard() {
   }
 
   // Fetch NDAs with related listing industry
-  const { data: ndas, error: ndaError } = await supabase
+  const { data: ndas } = await supabase
     .from('ndas')
     .select(`
       id,
@@ -44,15 +45,19 @@ export default async function BuyerDashboard() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       
-      <main className="flex-1 w-full bg-[#F5F7FA] py-12">
-        <div className="container mx-auto px-4 max-w-6xl">
+      <main className="flex-1 w-full bg-slate-50 dark:bg-slate-950 py-12 relative overflow-hidden">
+        {/* Background gradients */}
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-df-trust-blue/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-df-gold/10 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="container mx-auto px-4 max-w-6xl relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <h1 className="text-3xl font-bold text-df-navy font-dm-sans">
-              Nadzorna Ploča (Investitor)
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-jakarta tracking-tight">
+              Nadzorna Ploča <span className="text-df-trust-blue font-dm-sans opacity-80 text-xl ml-2 font-normal">(Investitor)</span>
             </h1>
             <Link href="/listings">
-              <Button className="bg-df-trust-blue hover:bg-df-trust-blue/90">
-                Pretraži Tržište
+              <Button className="bg-df-trust-blue hover:bg-df-trust-blue/90 text-white font-jakarta rounded-xl shadow-md hover:shadow-lg transition-all h-11 px-6">
+                <ExternalLink className="w-4 h-4 mr-2" /> Pretraži Tržište
               </Button>
             </Link>
           </div>
@@ -60,40 +65,43 @@ export default async function BuyerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Action Center */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-xl text-df-navy">Statusi NDA Zahtjeva</CardTitle>
-                  <CardDescription>Pratite napredak vaših zahtjeva za otkrivanje punih informacija o tvrtkama.</CardDescription>
+              <GlowCard className="border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-glass rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white/40 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/60 px-6 py-5">
+                  <CardTitle className="text-xl text-slate-900 dark:text-white font-jakarta">Statusi NDA Zahtjeva</CardTitle>
+                  <CardDescription className="text-slate-500 dark:text-slate-400 font-inter">Pratite napredak vaših zahtjeva za otkrivanje punih informacija o tvrtkama.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   {ndaList.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      Nemate još poslani NDA zahtjev. <Link href="/listings" className="text-df-trust-blue hover:underline">Zatražite prvi.</Link>
+                    <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                      <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-500 dark:text-slate-400 font-inter">Nemate još poslani NDA zahtjev.</p>
+                      <Link href="/listings" className="text-df-trust-blue hover:text-df-trust-blue/80 font-semibold hover:underline mt-2 inline-block">Zatražite prvi.</Link>
                     </div>
                   ) : null}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {ndaList.map((nda: any) => (
-                    <div key={nda.id} className="flex flex-col sm:flex-row justify-between items-center p-4 border border-slate-100 rounded-lg bg-white shadow-sm gap-4">
+                    <div key={nda.id as string} className="flex flex-col sm:flex-row justify-between items-center p-4 border border-slate-200/60 dark:border-slate-700/60 rounded-xl bg-white/80 dark:bg-slate-900/80 shadow-sm hover:shadow-md transition-shadow gap-4 group">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                          <Building2 className="w-5 h-5" />
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:bg-df-trust-blue/10 group-hover:text-df-trust-blue transition-colors">
+                          <Building2 className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="font-bold text-df-navy">Prilika #{nda.listing_id.split('-')[0]}</p>
-                          <p className="text-sm text-slate-500">{nda.listings?.industry_nkd || 'Nepoznata industrija'}</p>
+                          <p className="font-bold text-slate-900 dark:text-white font-jakarta">Tvrtka #{nda.listing_id.split('-')[0]}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 font-inter">{nda.listings?.industry_nkd || 'Nepoznata industrija'}</p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                         {nda.status === 'pending' ? (
-                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex gap-1">
-                            <Clock className="w-3 h-3" /> Na čekanju
+                          <Badge variant="outline" className="bg-amber-50/80 text-amber-700 border-amber-200/60 font-medium px-3 py-1 flex gap-1.5 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50">
+                            <Clock className="w-3.5 h-3.5" /> Na čekanju
                           </Badge>
                         ) : nda.status === 'signed' ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex gap-1">
-                            <FileText className="w-3 h-3" /> Odobreno
+                          <Badge variant="outline" className="bg-green-50/80 text-green-700 border-green-200/60 font-medium px-3 py-1 flex gap-1.5 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/50">
+                            <CheckCircle className="w-3.5 h-3.5" /> Odobreno
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex gap-1">
+                          <Badge variant="outline" className="bg-red-50/80 text-red-700 border-red-200/60 font-medium px-3 py-1 flex gap-1.5 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50">
                             Odbijeno
                           </Badge>
                         )}
@@ -101,44 +109,44 @@ export default async function BuyerDashboard() {
                         <Button 
                           size="sm" 
                           variant={nda.status === 'signed' ? 'default' : 'outline'}
-                          className={nda.status === 'signed' ? 'bg-df-navy hover:bg-df-navy/90' : ''}
+                          className={`rounded-lg font-jakarta h-9 ${nda.status === 'signed' ? 'bg-df-navy hover:bg-df-navy/90 text-white shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-transparent'}`}
                           disabled={nda.status !== 'signed'}
                         >
-                          {nda.status === 'signed' ? 'Ulaz u Deal Room' : 'Zatraženo'}
+                          {nda.status === 'signed' ? 'Otvori Deal Room' : 'Zatraženo'}
                         </Button>
                       </div>
                     </div>
                   ))}
                 </CardContent>
-              </Card>
+              </GlowCard>
             </div>
 
             {/* Profile Summary */}
             <div className="space-y-6">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-xl text-df-navy">Moj Investicijski Profil</CardTitle>
+              <GlowCard className="border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-glass rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white/40 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/60 px-6 py-5">
+                  <CardTitle className="text-xl text-slate-900 dark:text-white font-jakarta">Moj Profil</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-sm">
-                  <div className="flex justify-between border-b border-slate-100 pb-2">
-                    <span className="text-slate-500">Ime</span>
-                    <span className="font-semibold text-df-navy">{user?.user_metadata?.full_name || 'N/A'}</span>
+                <CardContent className="p-6 space-y-4 text-sm font-inter">
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                    <span className="text-slate-500 dark:text-slate-400">Ime</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{user?.user_metadata?.full_name || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-2">
-                    <span className="text-slate-500">Email</span>
-                    <span className="font-semibold text-df-navy">{user?.email}</span>
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                    <span className="text-slate-500 dark:text-slate-400">Email</span>
+                    <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[150px]" title={user?.email}>{user?.email}</span>
                   </div>
-                  <div className="flex justify-between pb-2">
-                    <span className="text-slate-500">Status</span>
-                    <span className="font-semibold text-green-600">Verificiran</span>
+                  <div className="flex justify-between items-center pb-1">
+                    <span className="text-slate-500 dark:text-slate-400">Status verifikacije</span>
+                    <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 border-none">Verificiran</Badge>
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" className="w-full text-df-trust-blue hover:text-df-trust-blue/80 hover:bg-df-trust-blue/10">
-                    Ažuriraj Profil
+                <CardFooter className="bg-slate-50/50 dark:bg-slate-950/20 px-6 py-4 border-t border-slate-100 dark:border-slate-800/60">
+                  <Button variant="outline" className="w-full font-jakarta rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    Postavke Profila
                   </Button>
                 </CardFooter>
-              </Card>
+              </GlowCard>
             </div>
           </div>
         </div>

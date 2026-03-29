@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
-    const { listing_id } = await req.json();
-    const supabase = await createClient();
+    const { } = await req.json(); // listing_id removed as unused
+    // const supabase = await createClient();
 
     // Verify Auth in production
     // const { data: { user } } = await supabase.auth.getUser();
