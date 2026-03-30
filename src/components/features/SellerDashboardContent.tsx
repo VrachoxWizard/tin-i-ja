@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, FileText, CheckCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface NdaRequest {
   id: string;
@@ -206,9 +207,10 @@ export function SellerDashboardContent({
                         <div className="absolute top-0 right-0 bg-linear-to-l from-card w-12 h-full pointer-events-none" />
                         <div
                           dangerouslySetInnerHTML={{
-                            __html:
+                            __html: sanitizeHtml(
                               listing.blind_teaser ||
-                              "Nema generiranog teasera.",
+                              "Nema generiranog teasera."
+                            ),
                           }}
                         />
                       </div>

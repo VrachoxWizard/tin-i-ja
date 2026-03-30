@@ -12,12 +12,26 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error, data: authData } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
     redirect('/login?error=Autentikacija nije uspjela')
   }
 
+  // Determine dashboard based on user role
+  let dashboardPath = '/dashboard/buyer'
+  if (authData.user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (profile?.role === 'seller') {
+      dashboardPath = '/dashboard/seller'
+    }
+  }
+
   revalidatePath('/', 'layout')
-  redirect('/dashboard/buyer') // Simplified for MVP: route to a single dashboard or determine via user role.
+  redirect(dashboardPath)
 }

@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Kupite Tvrtku | DealFlow",
   description:
     "Pronađite idealnu tvrtku za akviziciju. Kriterijski potpomognuto spajanje.",
+  alternates: { canonical: "/buy" },
 };
 
 export default function BuyPage() {

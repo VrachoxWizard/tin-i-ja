@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { logout } from "@/app/(auth)/logout/actions";
 
 const navLinks = [
   { href: "/listings", label: "Kupujem" },
@@ -38,6 +40,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; role?: string } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,11 +50,30 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      if (authUser) {
+        setUser({ id: authUser.id, role: authUser.user_metadata?.role });
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, role: session.user.user_metadata?.role });
+      } else {
+        setUser(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const dashboardPath = user?.role === 'seller' ? '/dashboard/seller' : '/dashboard/buyer';
+
   return (
     <header
       className={`fixed top-0 z-50 w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         isScrolled
-          ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-2.5 mx-auto rounded-full mt-4 left-0 right-0 max-w-4xl"
+          ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-2.5 mx-4 sm:mx-auto rounded-full mt-4 left-0 right-0 max-w-4xl"
           : "bg-transparent py-6"
       }`}
     >
@@ -105,12 +127,32 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-6">
-          <Link
-            href="/login"
-            className="font-sans text-[0.75rem] font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Prijava
-          </Link>
+          {user ? (
+            <>
+              <Link
+                href={dashboardPath}
+                className="font-sans text-[0.75rem] font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Dashboard
+              </Link>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  className="font-sans text-[0.75rem] font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                >
+                  <LogOut className="size-3.5" />
+                  Odjava
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="font-sans text-[0.75rem] font-medium tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Prijava
+            </Link>
+          )}
           <Link href="/valuate">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-none px-6 text-[0.7rem] font-bold tracking-[0.2em] uppercase transition-all duration-300 h-10">
               Procjena
@@ -137,6 +179,9 @@ export function Header() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigacija"
             variants={mobileMenuVariants}
             initial="hidden"
             animate="visible"
@@ -157,13 +202,34 @@ export function Header() {
                 </motion.div>
               ))}
               <motion.div variants={mobileLinkVariants}>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-white font-semibold py-3 block"
-                >
-                  Prijava
-                </Link>
+                {user ? (
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href={dashboardPath}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-white font-semibold py-3 border-b border-white/5 block"
+                    >
+                      Dashboard
+                    </Link>
+                    <form action={logout}>
+                      <button
+                        type="submit"
+                        className="text-slate-300 hover:text-white font-semibold py-3 flex items-center gap-2 w-full"
+                      >
+                        <LogOut className="size-4" />
+                        Odjava
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-white font-semibold py-3 block"
+                  >
+                    Prijava
+                  </Link>
+                )}
               </motion.div>
               <motion.div variants={mobileLinkVariants}>
                 <Link

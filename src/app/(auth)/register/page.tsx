@@ -185,6 +185,39 @@ function RegisterForm() {
           <PasswordStrength password={password} />
         </motion.div>
 
+        {/* Role selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.38 }}
+          className="space-y-2"
+        >
+          <Label className="text-foreground text-sm font-medium">
+            Registriram se kao
+          </Label>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: "buyer", label: "Kupac / Investitor", desc: "Tražim tvrtku za akviziciju" },
+              { value: "seller", label: "Prodavatelj", desc: "Želim prodati tvrtku" },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className="relative flex flex-col items-center gap-1.5 p-4 rounded-xl border border-border/60 bg-muted/30 cursor-pointer hover:border-gold/40 hover:bg-muted/50 transition-all has-[:checked]:border-gold has-[:checked]:bg-gold/5 has-[:checked]:shadow-[0_0_12px_rgba(212,175,55,0.1)]"
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value={option.value}
+                  defaultChecked={option.value === "buyer"}
+                  className="sr-only"
+                />
+                <span className="text-sm font-medium text-foreground">{option.label}</span>
+                <span className="text-[0.65rem] text-muted-foreground text-center leading-tight">{option.desc}</span>
+              </label>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

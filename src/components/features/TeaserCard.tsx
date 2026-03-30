@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Image from "next/image";
 
 interface TeaserCardProps {
@@ -155,7 +156,7 @@ export function TeaserCard({
             <div className="absolute -left-3 top-2 bottom-2 w-1 bg-linear-to-b from-trust to-transparent rounded-r-md opacity-30" />
             <div
               className="text-sm text-slate-400 space-y-2 line-clamp-4 pl-1 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: blindTeaserHtml }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(blindTeaserHtml) }}
             />
             {/* Fade out bottom overlay */}
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-linear-to-t from-card via-card/80 to-transparent pointer-events-none" />

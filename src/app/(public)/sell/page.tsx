@@ -5,6 +5,7 @@ import { EyeOff, Bot, Handshake } from "lucide-react";
 export const metadata: Metadata = {
   title: "Prodajte Tvrtku | DealFlow",
   description: "Započnite proces prodaje vaše tvrtke diskretno i sigurno.",
+  alternates: { canonical: "/sell" },
 };
 
 export default function SellPage() {

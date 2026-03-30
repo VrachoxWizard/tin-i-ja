@@ -11,6 +11,7 @@ export function FinalCTA() {
           src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2500&auto=format&fit=crop"
           alt="Premium Space"
           fill
+          sizes="100vw"
           className="object-cover object-center opacity-[0.05] mix-blend-luminosity grayscale scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/90" />

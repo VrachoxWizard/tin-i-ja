@@ -1,36 +1,46 @@
 import { NextResponse } from 'next/server';
-// import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { createRequestLogger } from '@/lib/logger';
 
 export async function POST(req: Request) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _req = req; // Keeps it accessible if needed later
+  const log = createRequestLogger('/api/buyers/profile');
   try {
-    // const data = await req.json();
-    // const supabase = await createClient();
+    const data = await req.json();
+    const supabase = await createClient();
 
-    // Verification of Auth in production
-    // const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Mock DB insertion for MVP demo without auth
-    /*
     const { error: dbError } = await supabase.from('buyer_profiles').insert({
       user_id: user.id,
-      buyer_type: data.buyer_type,
-      investment_min: data.investment_min,
-      investment_max: data.investment_max,
-      target_industries: [data.target_industries], // In a real app we'd map this properly or allow multiple
-      target_regions: [data.target_regions],
-      investment_thesis: data.investment_thesis,
+      target_industries: Array.isArray(data.target_industries)
+        ? data.target_industries
+        : [data.target_industries],
+      target_regions: Array.isArray(data.target_regions)
+        ? data.target_regions
+        : [data.target_regions],
+      min_revenue: parseFloat(data.investment_min) || null,
+      max_ev: parseFloat(data.investment_max) || null,
+      transaction_type: data.buyer_type || 'individual',
     });
-    */
+
+    if (dbError) {
+      log.error('Failed to save buyer profile', dbError);
+      return NextResponse.json(
+        { error: 'Failed to save buyer profile.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Buyer profile cached successfully for matchmaking engine.' 
+      message: 'Buyer profile saved successfully for matchmaking engine.' 
     });
 
   } catch (error) {
-    console.error('Error processing buyer profile:', error);
+    log.error('Error processing buyer profile', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

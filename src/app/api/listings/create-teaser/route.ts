@@ -2,14 +2,39 @@ import { NextResponse } from 'next/server';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { createClient } from '@/lib/supabase/server';
+import { createRequestLogger } from '@/lib/logger';
 
 export async function POST(req: Request) {
+  const log = createRequestLogger('/api/listings/create-teaser');
   try {
     const data = await req.json();
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Input validation
+    if (!data.industry || typeof data.industry !== 'string') {
+      return NextResponse.json({ error: 'Industry is required.' }, { status: 400 });
+    }
+    if (!data.region || typeof data.region !== 'string') {
+      return NextResponse.json({ error: 'Region is required.' }, { status: 400 });
+    }
+    if (!data.year_founded || isNaN(parseInt(data.year_founded, 10))) {
+      return NextResponse.json({ error: 'Valid year_founded is required.' }, { status: 400 });
+    }
+    if (!data.employees || isNaN(parseInt(data.employees, 10))) {
+      return NextResponse.json({ error: 'Valid employees count is required.' }, { status: 400 });
+    }
+    if (!data.revenue || isNaN(parseFloat(data.revenue)) || parseFloat(data.revenue) < 0) {
+      return NextResponse.json({ error: 'Valid revenue is required.' }, { status: 400 });
+    }
+    if (!data.ebitda || isNaN(parseFloat(data.ebitda))) {
+      return NextResponse.json({ error: 'Valid EBITDA is required.' }, { status: 400 });
+    }
+    if (!data.asking_price || isNaN(parseFloat(data.asking_price)) || parseFloat(data.asking_price) < 0) {
+      return NextResponse.json({ error: 'Valid asking_price is required.' }, { status: 400 });
+    }
 
     const prompt = `
       Generiraj anonimni "Blind Teaser" za prodaju tvrtke na hrvatskom jeziku.
@@ -52,7 +77,7 @@ export async function POST(req: Request) {
     });
 
     if (dbError) {
-      console.error(dbError);
+      log.error('Failed to insert listing', dbError);
       throw dbError;
     }
 
@@ -63,7 +88,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    console.error('Error generating teaser:', error);
+    log.error('Error generating teaser', error);
     return NextResponse.json(
       { error: 'Internal server error while generating teaser' },
       { status: 500 }

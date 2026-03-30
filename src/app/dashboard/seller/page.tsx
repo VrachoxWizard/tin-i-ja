@@ -12,6 +12,8 @@ import { Eye, FileText, CheckCircle, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { NdaActions } from "@/components/features/NdaActions";
 
 export const metadata: Metadata = {
   title: "Nadzorna Ploča Prodavatelja | DealFlow",
@@ -163,9 +165,10 @@ export default async function SellerDashboard() {
                         <div className="absolute top-0 right-0 bg-linear-to-l from-white dark:from-slate-900 w-12 h-full pointer-events-none" />
                         <div
                           dangerouslySetInnerHTML={{
-                            __html:
+                            __html: sanitizeHtml(
                               listing.blind_teaser ||
-                              "Nema generiranog teasera.",
+                              "Nema generiranog teasera."
+                            ),
                           }}
                         />
                       </div>
@@ -255,33 +258,11 @@ export default async function SellerDashboard() {
                         )}
                       </div>
 
-                      {req.status === "pending" && (
-                        <div className="flex gap-2 mt-1">
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-df-trust-blue hover:bg-df-trust-blue/90 text-white font-jakarta rounded-lg h-9 shadow-sm"
-                          >
-                            Odobri
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 font-jakarta rounded-lg h-9"
-                          >
-                            Odbij
-                          </Button>
-                        </div>
-                      )}
-                      {req.status === "signed" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full font-jakarta rounded-lg border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 h-9"
-                        >
-                          <FileText className="w-3.5 h-3.5 mr-2 text-slate-400" />{" "}
-                          Otvori Deal Room
-                        </Button>
-                      )}
+                      <NdaActions
+                        ndaId={req.id as string}
+                        status={req.status as string}
+                        listingId={req.listing_id as string}
+                      />
                     </div>
                   ))}
                 </CardContent>

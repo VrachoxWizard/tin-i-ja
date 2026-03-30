@@ -152,18 +152,25 @@ export default async function BuyerDashboard() {
                           </Badge>
                         )}
 
-                        <Button
-                          size="sm"
-                          variant={
-                            nda.status === "signed" ? "default" : "outline"
-                          }
-                          className={`rounded-lg font-jakarta h-9 ${nda.status === "signed" ? "bg-df-navy hover:bg-df-navy/90 text-white shadow-sm" : "border-slate-200 dark:border-slate-700 bg-transparent"}`}
-                          disabled={nda.status !== "signed"}
-                        >
-                          {nda.status === "signed"
-                            ? "Otvori Deal Room"
-                            : "Zatraženo"}
-                        </Button>
+                        {nda.status === "signed" ? (
+                          <Link href={`/dashboard/buyer/deal-room/${nda.listing_id}`}>
+                            <Button
+                              size="sm"
+                              className="rounded-lg font-jakarta h-9 bg-df-navy hover:bg-df-navy/90 text-white shadow-sm"
+                            >
+                              Otvori Deal Room
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-lg font-jakarta h-9 border-slate-200 dark:border-slate-700 bg-transparent"
+                            disabled
+                          >
+                            Zatraženo
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -220,9 +227,11 @@ export default async function BuyerDashboard() {
                 <CardFooter className="bg-slate-50/50 dark:bg-slate-950/20 px-6 py-4 border-t border-slate-100 dark:border-slate-800/60">
                   <Button
                     variant="outline"
-                    className="w-full font-heading rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    disabled
+                    title="Uskoro dostupno"
+                    className="w-full font-heading rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Postavke Profila
+                    Postavke Profila (Uskoro)
                   </Button>
                 </CardFooter>
               </GlowCard>

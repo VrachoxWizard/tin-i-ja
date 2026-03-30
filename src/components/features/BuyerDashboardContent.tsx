@@ -320,9 +320,11 @@ export function BuyerDashboardContent({
                 <CardFooter className="bg-white/[0.01] px-6 py-4 border-t border-white/[0.06]">
                   <Button
                     variant="outline"
-                    className="w-full font-heading rounded-xl border-white/[0.08] hover:bg-white/[0.03] transition-colors"
+                    disabled
+                    title="Uskoro dostupno"
+                    className="w-full font-heading rounded-xl border-white/[0.08] hover:bg-white/[0.03] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Postavke Profila
+                    Postavke Profila (Uskoro)
                   </Button>
                 </CardFooter>
               </GlowCard>

@@ -34,6 +34,7 @@ function SubmitButton() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
+  const message = searchParams.get("message");
 
   return (
     <motion.div
@@ -69,6 +70,16 @@ function LoginForm() {
           className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm"
         >
           {error}
+        </motion.div>
+      )}
+
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm"
+        >
+          {message}
         </motion.div>
       )}
 
@@ -109,12 +120,12 @@ function LoginForm() {
             >
               Lozinka
             </Label>
-            <button
-              type="button"
+            <Link
+              href="/forgot-password"
               className="text-xs text-muted-foreground hover:text-gold transition-colors"
             >
               Zaboravljena lozinka?
-            </button>
+            </Link>
           </div>
           <Input
             id="password"

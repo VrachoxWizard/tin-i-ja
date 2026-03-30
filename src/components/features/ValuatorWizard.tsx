@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { sanitizeHtml } from "@/lib/sanitize";
 import Link from "next/link";
 import {
   Monitor,
@@ -152,10 +153,19 @@ export function ValuatorWizard() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4" role="radiogroup" aria-label="Odaberite djelatnost">
                   {INDUSTRIES.map((ind) => (
                     <div
                       key={ind.id}
+                      role="radio"
+                      aria-checked={formData.industry === ind.id}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setFormData({ ...formData, industry: ind.id });
+                        }
+                      }}
                       onClick={() =>
                         setFormData({ ...formData, industry: ind.id })
                       }
@@ -301,6 +311,7 @@ export function ValuatorWizard() {
                       max={5}
                       min={1}
                       step={1}
+                      aria-label="Ovisnost o vlasniku"
                       onValueChange={(val: number | readonly number[]) =>
                         setFormData({
                           ...formData,
@@ -340,6 +351,7 @@ export function ValuatorWizard() {
                       max={5}
                       min={1}
                       step={1}
+                      aria-label="Automatizacija procesa"
                       onValueChange={(val: number | readonly number[]) =>
                         setFormData({
                           ...formData,
@@ -438,6 +450,7 @@ export function ValuatorWizard() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
+                aria-live="polite"
                 className="space-y-10 pb-6 w-full"
               >
                 <div className="text-center">
@@ -474,13 +487,13 @@ export function ValuatorWizard() {
 
                 <div
                   className="prose prose-invert max-w-none text-muted-foreground font-sans text-left prose-headings:font-heading prose-headings:text-foreground leading-relaxed p-6 bg-white/[0.02] rounded-none border border-white/10"
-                  dangerouslySetInnerHTML={{ __html: result.html }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.html) }}
                 />
 
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-6">
                   <Link href="/dashboard/seller" className="w-full sm:w-auto">
                     <Button className="w-full sm:w-auto bg-foreground hover:bg-white/90 text-background font-heading font-bold rounded-none px-10 h-14 text-base transition-all hover:-translate-y-1 uppercase tracking-widest group">
-                      Započ ni Prodajni Proces
+                      Započni Prodajni Proces
                       <ArrowRight className="ml-2 size-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
@@ -489,7 +502,7 @@ export function ValuatorWizard() {
                       onClick={() => setStep(1)}
                       className="w-full sm:w-auto font-heading uppercase tracking-widest rounded-none px-6 h-14 text-muted-foreground hover:text-foreground"
                     >
-                    Ponovi izrač un
+                    Ponovi izračun
                   </Button>
                 </div>
               </motion.div>

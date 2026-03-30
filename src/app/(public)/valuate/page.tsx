@@ -1,5 +1,25 @@
-import { ValuatorWizard } from "@/components/features/ValuatorWizard";
+import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Sparkles, Clock, ShieldCheck } from "lucide-react";
+
+const ValuatorWizard = dynamic(
+  () =>
+    import("@/components/features/ValuatorWizard").then(
+      (mod) => mod.ValuatorWizard
+    ),
+  {
+    loading: () => (
+      <div className="h-[500px] animate-pulse bg-white/[0.02] border border-white/10 rounded-none" />
+    ),
+  }
+);
+
+export const metadata: Metadata = {
+  title: "AI Procjena Vrijednosti Tvrtke",
+  description:
+    "Besplatna AI procjena vrijednosti vaše tvrtke. Saznajte raspone valuacije u minutama — anonimno i povjerljivo.",
+  alternates: { canonical: "/valuate" },
+};
 
 export default function ValuatePage() {
   return (

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Planiranje Nasljeđivanja | DealFlow",
   description:
     "Strateško planiranje nasljeđivanja vaše tvrtke. Osigurajte budućnost vašeg poslovanja s DealFlow platformom.",
+  alternates: { canonical: "/succession" },
 };
 
 export default function SuccessionPage() {
