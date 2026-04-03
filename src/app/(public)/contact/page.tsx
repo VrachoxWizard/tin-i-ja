@@ -1,45 +1,32 @@
 import { Metadata } from "next";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Kontakt",
+  title: "Kontakt | DealFlow",
   description:
-    "Kontaktirajte DealFlow tim za pitanja o prodaji ili kupnji tvrtke u Hrvatskoj.",
+    "Kontaktirajte DealFlow tim za diskretne upite o prodaji, kupnji ili procjeni vrijednosti tvrtke u Hrvatskoj.",
   alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {
   return (
     <div className="flex flex-col bg-background">
-      <section className="relative pt-40 pb-24 overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`,
-            backgroundSize: "64px 64px",
-          }}
-        />
-
-        <div className="container relative z-10 mx-auto px-4 max-w-4xl">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-4 px-4 py-1.5 border border-white/10 text-muted-foreground text-[0.65rem] font-bold uppercase tracking-[0.2em] mb-12">
-              <span className="w-1.5 h-1.5 bg-primary" />
+      <section className="relative border-b border-border bg-muted/20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(21,101,192,0.08),transparent_42%)]" />
+        <div className="container relative mx-auto max-w-6xl px-4 pt-18 pb-16 sm:pt-24 sm:pb-20">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-4">
               Kontakt
-            </div>
-
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading text-foreground mb-8 leading-[1.05] tracking-tighter">
-              Razgovarajmo o{" "}
-              <span className="italic font-light text-muted-foreground">
-                vašem poslu
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed tracking-wide font-light">
-              Naš tim stoji vam na raspolaganju za sva pitanja vezana uz kupnju,
-              prodaju ili procjenu vrijednosti tvrtke.
+            </p>
+            <h1>Razgovarajmo o vašem sljedećem koraku.</h1>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              Za diskretne upite vezane uz prodaju, kupnju, valuaciju ili
+              planiranje tranzicije, javite nam se izravno. Komunikacija je
+              povjerljiva i strukturirana za osjetljive poslovne procese.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5 border border-white/5 p-px">
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
             {[
               {
                 icon: Mail,
@@ -60,38 +47,27 @@ export default function ContactPage() {
                 href: null,
               },
             ].map(({ icon: Icon, label, value, href }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center justify-center gap-4 px-6 py-14 bg-card group transition-colors hover:bg-card/80"
-              >
-                <Icon
-                  className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-500"
-                  strokeWidth={1}
-                />
-                <span className="text-[0.6rem] text-primary font-bold tracking-widest uppercase">
+              <div key={label} className="border border-border bg-card p-6">
+                <Icon className="w-5 h-5 text-primary mb-4" />
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2">
                   {label}
-                </span>
+                </p>
                 {href ? (
-                  <a
-                    href={href}
-                    className="text-sm text-foreground font-light tracking-wide hover:text-primary transition-colors"
-                  >
+                  <a href={href} className="text-foreground hover:text-primary">
                     {value}
                   </a>
                 ) : (
-                  <span className="text-sm text-foreground font-light tracking-wide">
-                    {value}
-                  </span>
+                  <p className="text-foreground">{value}</p>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="mt-16 p-8 border border-white/5 bg-card">
-            <p className="text-sm text-muted-foreground leading-relaxed text-center">
-              Za diskretne upite vezane uz M&A transakcije, obratite nam se
-              putem emaila. Sva komunikacija je strogo povjerljiva i zaštićena
-              NDA ugovorima.
+          <div className="mt-8 border border-border bg-card p-5 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-primary mt-0.5" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Za osjetljive M&A procese preporučujemo prvi kontakt emailom kako
+              bismo mogli strukturirati sljedeći korak i razinu povjerljivosti.
             </p>
           </div>
         </div>

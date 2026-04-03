@@ -13,12 +13,12 @@
   --font-jakarta: var(--font-heading);
   --font-inter: var(--font-sans);
   --font-dm-sans: var(--font-heading);
-  --color-navy: #050a15;
-  --color-gold: #D4AF37;
-  --color-trust: #3B4C68;
-  --color-df-navy: #050a15;
-  --color-df-trust-blue: #3B4C68;
-  --color-df-gold: #D4AF37;
+  --color-navy: #0d1b2a;
+  --color-gold: #b08a3c;
+  --color-trust: #1565c0;
+  --color-df-navy: #0d1b2a;
+  --color-df-trust-blue: #1565c0;
+  --color-df-gold: #b08a3c;
   --color-card-elevated: var(--card-elevated);
   --color-surface-glass: var(--surface-glass);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
@@ -73,37 +73,37 @@
 }
 
 :root {
-  --background: #fafafa;
-  --foreground: #0d1b2a;
+  --background: #f7f8fa;
+  --foreground: #102033;
   --card: #ffffff;
-  --card-foreground: #0d1b2a;
+  --card-foreground: #102033;
   --popover: #ffffff;
-  --popover-foreground: #0d1b2a;
-  --primary: #d4af37;
+  --popover-foreground: #102033;
+  --primary: #1565c0;
   --primary-foreground: #ffffff;
-  --secondary: #2563eb;
+  --secondary: #b08a3c;
   --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #e2e8f0;
-  --accent-foreground: #0d1b2a;
+  --muted: #eef3f8;
+  --muted-foreground: #60748a;
+  --accent: #e8eef5;
+  --accent-foreground: #102033;
   --destructive: #ef4444;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #d4af37;
+  --border: #d7e0ea;
+  --input: #d7e0ea;
+  --ring: #1565c0;
   --chart-1: #1565c0;
-  --chart-2: #d4af37;
-  --chart-3: #0d1b2a;
-  --chart-4: #64748b;
-  --chart-5: #cbd5e1;
+  --chart-2: #b08a3c;
+  --chart-3: #102033;
+  --chart-4: #60748a;
+  --chart-5: #d7e0ea;
   --radius: 0.5rem;
   --sidebar: #f8fafc;
-  --sidebar-foreground: #0d1b2a;
+  --sidebar-foreground: #102033;
   --sidebar-primary: #1565c0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0d1b2a;
-  --sidebar-border: #e2e8f0;
+  --sidebar-accent: #eef3f8;
+  --sidebar-accent-foreground: #102033;
+  --sidebar-border: #d7e0ea;
   --sidebar-ring: #1565c0;
 }
 
@@ -149,27 +149,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at top, rgba(21, 101, 192, 0.08), transparent 35%),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(247, 248, 250, 0.95));
   }
   html {
     @apply font-sans;
   }
   h1 {
-    @apply font-heading font-medium tracking-tighter;
-    font-size: clamp(3.5rem, 7vw + 1rem, 7.5rem);
-    line-height: 1.05;
+    @apply font-heading font-semibold tracking-tight;
+    font-size: clamp(2.8rem, 5vw + 1rem, 5.8rem);
+    line-height: 1.04;
   }
   h2 {
-    @apply font-heading font-medium tracking-tighter;
-    font-size: clamp(2.5rem, 5vw + 1rem, 5rem);
-    line-height: 1.05;
+    @apply font-heading font-semibold tracking-tight;
+    font-size: clamp(2.2rem, 4vw + 1rem, 4.2rem);
+    line-height: 1.08;
   }
   h3 {
-    @apply font-heading font-medium tracking-tight;
-    font-size: clamp(1.5rem, 2vw + 1rem, 2.5rem);
+    @apply font-heading font-semibold tracking-tight;
+    font-size: clamp(1.4rem, 1.7vw + 1rem, 2.2rem);
     line-height: 1.2;
   }
   h4 {
-    @apply font-heading font-medium tracking-tight;
+    @apply font-heading font-semibold tracking-tight;
     font-size: clamp(1.25rem, 1.5vw + 1rem, 1.5rem);
     line-height: 1.3;
   }

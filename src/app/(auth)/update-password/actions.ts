@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { validatePassword } from '@/lib/password-validation'
 
 export async function updatePassword(formData: FormData) {
   const supabase = await createClient()
@@ -9,17 +10,18 @@ export async function updatePassword(formData: FormData) {
   const confirmPassword = formData.get('confirm_password') as string
 
   if (password !== confirmPassword) {
-    redirect('/update-password?error=Lozinke se ne podudaraju')
+    redirect('/update-password?error=password_mismatch')
   }
 
-  if (password.length < 6) {
-    redirect('/update-password?error=Lozinka mora imati najmanje 6 znakova')
+  const passwordError = validatePassword(password)
+  if (passwordError) {
+    redirect(`/update-password?error=${passwordError}`)
   }
 
   const { error } = await supabase.auth.updateUser({ password })
 
   if (error) {
-    redirect('/update-password?error=Ažuriranje lozinke nije uspjelo. Pokušajte ponovo.')
+    redirect('/update-password?error=password_update_failed')
   }
 
   redirect('/login?message=Lozinka uspješno ažurirana. Prijavite se.')

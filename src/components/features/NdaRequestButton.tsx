@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, FileSignature, CheckCircle, Clock, XCircle } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { CheckCircle, Clock, FileSignature, Loader2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { requestNdaAction } from "@/app/actions/dealflow";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface NdaRequestButtonProps {
   listingId: string;
@@ -19,38 +19,22 @@ export function NdaRequestButton({
   ndaStatus,
   isLoggedIn,
 }: NdaRequestButtonProps) {
-  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(ndaStatus);
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  async function handleRequest() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/nda/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listing_id: listingId }),
-      });
-      const data = await res.json();
+  const handleRequest = () => {
+    startTransition(async () => {
+      const result = await requestNdaAction(listingId);
 
-      if (!res.ok) {
-        toast.error(data.error || "Greška pri slanju NDA zahtjeva.");
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
 
-      if (data.success) {
-        setStatus("pending");
-        toast.success("NDA zahtjev poslan! Čekamo odobrenje prodavatelja.");
-      } else {
-        toast.info(data.message);
-      }
-      router.refresh();
-    } catch {
-      toast.error("Mrežna greška. Pokušajte ponovo.");
-    } finally {
-      setLoading(false);
-    }
-  }
+      setStatus((current) => current ?? "pending");
+      toast.success(result.message || "NDA zahtjev je uspješno poslan.");
+    });
+  };
 
   if (!isLoggedIn) {
     return (
@@ -68,13 +52,13 @@ export function NdaRequestButton({
   if (status === "signed") {
     return (
       <div className="space-y-3" aria-live="polite">
-        <Badge className="w-full justify-center py-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 rounded-none">
+        <Badge className="w-full justify-center py-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 rounded-none">
           <CheckCircle className="w-3.5 h-3.5 mr-2" />
-          NDA Potpisan
+          NDA potpisan
         </Badge>
         <Link href={`/dashboard/buyer/deal-room/${listingId}`}>
           <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-none h-12 font-heading uppercase tracking-widest text-sm">
-            Otvori Deal Room
+            Otvori deal room
           </Button>
         </Link>
       </div>
@@ -84,7 +68,7 @@ export function NdaRequestButton({
   if (status === "pending") {
     return (
       <div aria-live="polite">
-        <Badge className="w-full justify-center py-2.5 bg-amber-500/10 text-amber-400 border-amber-500/20 rounded-none">
+        <Badge className="w-full justify-center py-2.5 bg-amber-500/10 text-amber-500 border-amber-500/20 rounded-none">
           <Clock className="w-3.5 h-3.5 mr-2" />
           NDA zahtjev na čekanju
         </Badge>
@@ -95,7 +79,7 @@ export function NdaRequestButton({
   if (status === "rejected") {
     return (
       <div aria-live="polite">
-        <Badge className="w-full justify-center py-2.5 bg-red-500/10 text-red-400 border-red-500/20 rounded-none">
+        <Badge className="w-full justify-center py-2.5 bg-red-500/10 text-red-500 border-red-500/20 rounded-none">
           <XCircle className="w-3.5 h-3.5 mr-2" />
           NDA zahtjev odbijen
         </Badge>
@@ -107,10 +91,10 @@ export function NdaRequestButton({
     <div aria-live="polite">
       <Button
         onClick={handleRequest}
-        disabled={loading}
+        disabled={isPending}
         className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-none h-12 font-heading uppercase tracking-widest text-sm"
       >
-        {loading ? (
+        {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
         ) : (
           <FileSignature className="w-4 h-4 mr-2" />

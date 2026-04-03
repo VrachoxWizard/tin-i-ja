@@ -1,85 +1,116 @@
-export interface BuyerProfile {
-  id: string;
-  target_industries: string[];
-  target_regions: string[];
-  investment_min: number;
-  investment_max: number;
-  buyer_type: 'individual' | 'strategic' | 'financial';
-}
+import type {
+  BuyerProfileMatchInput,
+  ListingMatchInput,
+} from "@/lib/contracts";
+import { ALL_INDUSTRIES_LABEL, ALL_REGIONS_LABEL } from "@/data/constants";
 
-export interface Listing {
-  id: string;
-  industry: string;
-  region: string;
-  asking_price: number;
-  ebitda: number;
-  revenue: number;
+export interface MatchBreakdown {
+  evFit: number;
+  sectorFit: number;
+  geographyFit: number;
+  financialFit: number;
 }
 
 export interface MatchResult {
-  score: number; // 0 to 100
-  breakdown: {
-    industryMatch: number;
-    regionMatch: number;
-    financialMatch: number;
-  };
+  score: number;
+  breakdown: MatchBreakdown;
   isQualified: boolean;
 }
 
-/**
- * Calculates a match score between a Buyer Profile and a Deal Listing.
- * Weighting:
- * - Industry: 40% (Critical fit)
- * - Region: 20% (Important, but less critical for PEs/Strategic)
- * - Financials: 40% (Must be within or close to investment bounds)
- */
-export function calculateMatchScore(buyer: BuyerProfile, listing: Listing): MatchResult {
-  let score = 0;
-  const breakdown = { industryMatch: 0, regionMatch: 0, financialMatch: 0 };
+const WHOLE_COUNTRY_REGION = ALL_REGIONS_LABEL;
+const ALL_INDUSTRIES = ALL_INDUSTRIES_LABEL;
 
-  // 1. Industry Match (40 pts)
-  const isAllIndustries = buyer.target_industries.includes('Sve Industrijske Grane');
-  if (isAllIndustries || buyer.target_industries.includes(listing.industry)) {
-    breakdown.industryMatch = 40;
-    score += 40;
+function scoreRange(
+  value: number,
+  min: number | null,
+  max: number | null,
+  perfectScore: number,
+) {
+  if (min == null && max == null) {
+    return perfectScore;
   }
 
-  // 2. Region Match (20 pts)
-  const isWholeCountry = buyer.target_regions.includes('Cijela Hrvatska');
-  if (isWholeCountry || buyer.target_regions.includes(listing.region)) {
-    breakdown.regionMatch = 20;
-    score += 20;
-  } else if (buyer.buyer_type !== 'individual') {
-    // Strategic/Financial buyers are usually more flexible geographically
-    breakdown.regionMatch = 10;
-    score += 10;
+  if (min != null && value < min) {
+    const gap = min - value;
+    return gap <= min * 0.15 ? perfectScore / 2 : 0;
   }
 
-  // 3. Financial Match (40 pts)
-  // We compare the listing's asking price against the buyer's minimum/maximum investment size.
-  const diffMax = listing.asking_price - buyer.investment_max;
-  const diffMin = buyer.investment_min - listing.asking_price;
-
-  if (listing.asking_price >= buyer.investment_min && listing.asking_price <= buyer.investment_max) {
-    // Perfect hit within bounds
-    breakdown.financialMatch = 40;
-    score += 40;
-  } else if (diffMax > 0 && diffMax <= buyer.investment_max * 0.2) {
-    // Slightly above max (within 20% tolerance) - 20 pts
-    breakdown.financialMatch = 20;
-    score += 20;
-  } else if (diffMin > 0 && diffMin <= buyer.investment_min * 0.5) {
-    // Below minimum, but not completely off - 20 pts
-    breakdown.financialMatch = 20;
-    score += 20;
+  if (max != null && value > max) {
+    const gap = value - max;
+    return gap <= max * 0.15 ? perfectScore / 2 : 0;
   }
 
-  // Qualification threshold: 70 points
-  const isQualified = score >= 70;
+  return perfectScore;
+}
+
+export function calculateMatchScore(
+  buyer: BuyerProfileMatchInput,
+  listing: ListingMatchInput,
+): MatchResult {
+  const breakdown: MatchBreakdown = {
+    evFit: scoreRange(
+      listing.askingPriceEur,
+      buyer.targetEvMin,
+      buyer.targetEvMax,
+      30,
+    ),
+    sectorFit:
+      buyer.targetIndustries.includes(ALL_INDUSTRIES) ||
+      buyer.targetIndustries.includes(listing.industryNkd)
+        ? 25
+        : 0,
+    geographyFit:
+      buyer.targetRegions.includes(WHOLE_COUNTRY_REGION) ||
+      buyer.targetRegions.includes(listing.region)
+        ? 20
+        : 0,
+    financialFit: scoreRange(
+      listing.revenueEur,
+      buyer.targetRevenueMin,
+      buyer.targetRevenueMax,
+      25,
+    ),
+  };
+
+  const score =
+    breakdown.evFit +
+    breakdown.sectorFit +
+    breakdown.geographyFit +
+    breakdown.financialFit;
 
   return {
     score,
     breakdown,
-    isQualified
+    isQualified: score > 70,
   };
+}
+
+export function buildFallbackMatchNarrative(
+  buyer: BuyerProfileMatchInput,
+  listing: ListingMatchInput,
+  result: MatchResult,
+) {
+  const highlights: string[] = [];
+
+  if (result.breakdown.evFit >= 30) {
+    highlights.push("uklapa se u vaš EV raspon");
+  }
+
+  if (result.breakdown.sectorFit >= 25) {
+    highlights.push(`odgovara preferiranom sektoru ${listing.industryNkd}`);
+  }
+
+  if (result.breakdown.geographyFit >= 20) {
+    highlights.push(`nalazi se u regiji ${listing.region}`);
+  }
+
+  if (result.breakdown.financialFit >= 25) {
+    highlights.push("ima prihode unutar ciljane veličine poslovanja");
+  }
+
+  if (highlights.length === 0) {
+    return "Ova prilika pokazuje dovoljno podudarnosti s vašim kriterijima za daljnju analizu.";
+  }
+
+  return `Ova prilika je relevantna jer ${highlights.join(", ")}.`;
 }

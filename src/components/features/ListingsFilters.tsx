@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { INDUSTRIES, REGIONS } from "@/data/constants";
 
 export function ListingsSearchBar() {
   const router = useRouter();
@@ -108,10 +109,12 @@ export function ListingsSidebar() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-none border-white/10 bg-card">
-              <SelectItem value="all">Sve Industrije</SelectItem>
-              <SelectItem value="it">IT i Softver</SelectItem>
-              <SelectItem value="manufacturing">Proizvodnja</SelectItem>
-              <SelectItem value="tourism">Turizam</SelectItem>
+              <SelectItem value="all">Sve industrije</SelectItem>
+              {INDUSTRIES.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {industry}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -129,10 +132,12 @@ export function ListingsSidebar() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-none border-white/10 bg-card">
-              <SelectItem value="all">Cijela Hrvatska</SelectItem>
-              <SelectItem value="zagreb">Grad Zagreb</SelectItem>
-              <SelectItem value="dalmacija">Dalmacija</SelectItem>
-              <SelectItem value="istra">Istra</SelectItem>
+              <SelectItem value="all">Sve regije</SelectItem>
+              {REGIONS.map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

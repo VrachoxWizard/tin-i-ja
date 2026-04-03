@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { login } from "./actions";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { motion } from "framer-motion";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -33,7 +34,8 @@ function SubmitButton() {
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const errorCode = searchParams.get("error");
+  const errorMessage = getAuthErrorMessage(errorCode);
   const message = searchParams.get("message");
 
   return (
@@ -63,13 +65,13 @@ function LoginForm() {
       </div>
 
       {/* Error message */}
-      {error && (
+      {errorMessage && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm"
         >
-          {error}
+          {errorMessage}
         </motion.div>
       )}
 

@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/blob-report/
+/test-results/
 
 # next.js
 /.next/
@@ -41,3 +44,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# temp files from codex / tooling
+.tmp-*
+eslint.log
+build-error.txt
+
+# python cache
+__pycache__/
+
+# windsurf plans (local only)
+.windsurf/plans/

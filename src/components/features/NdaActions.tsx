@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { reviewNdaAction } from "@/app/actions/dealflow";
+import { Button } from "@/components/ui/button";
 
 interface NdaActionsProps {
   ndaId: string;
@@ -14,49 +14,45 @@ interface NdaActionsProps {
 }
 
 export function NdaActions({ ndaId, status, listingId }: NdaActionsProps) {
-  const [loading, setLoading] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState(status);
-  const router = useRouter();
+  const [pendingAction, setPendingAction] = useState<"approve" | "reject" | null>(
+    null,
+  );
+  const [isPending, startTransition] = useTransition();
 
-  async function handleAction(action: "approve" | "reject") {
-    setLoading(action);
-    try {
-      const res = await fetch("/api/nda/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nda_id: ndaId, action }),
-      });
-      const data = await res.json();
+  const handleAction = (action: "approve" | "reject") => {
+    setPendingAction(action);
 
-      if (!res.ok || !data.success) {
-        toast.error(data.error || "Greška pri ažuriranju NDA statusa.");
+    startTransition(async () => {
+      const result = await reviewNdaAction(ndaId, action);
+
+      if (result.error) {
+        toast.error(result.error);
+        setPendingAction(null);
         return;
       }
 
-      setCurrentStatus(data.status);
+      setCurrentStatus(action === "approve" ? "signed" : "rejected");
+      setPendingAction(null);
       toast.success(
-        action === "approve"
-          ? "NDA odobren. Kupac sada ima pristup Deal Roomu."
-          : "NDA zahtjev je odbijen."
+        result.message ||
+          (action === "approve"
+            ? "NDA je odobren."
+            : "NDA zahtjev je odbijen."),
       );
-      router.refresh();
-    } catch {
-      toast.error("Mrežna greška. Pokušajte ponovo.");
-    } finally {
-      setLoading(null);
-    }
-  }
+    });
+  };
 
   if (currentStatus === "pending") {
     return (
       <div className="flex gap-2 mt-1">
         <Button
           size="sm"
-          className="flex-1 bg-df-trust-blue hover:bg-df-trust-blue/90 text-white font-jakarta rounded-lg h-9 shadow-sm"
+          className="flex-1 bg-df-trust-blue hover:bg-df-trust-blue/90 text-white rounded-none h-9"
           onClick={() => handleAction("approve")}
-          disabled={loading !== null}
+          disabled={isPending}
         >
-          {loading === "approve" ? (
+          {pendingAction === "approve" ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             "Odobri"
@@ -65,11 +61,11 @@ export function NdaActions({ ndaId, status, listingId }: NdaActionsProps) {
         <Button
           size="sm"
           variant="outline"
-          className="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 font-jakarta rounded-lg h-9"
+          className="flex-1 text-red-600 border-red-200 hover:bg-red-50 rounded-none h-9"
           onClick={() => handleAction("reject")}
-          disabled={loading !== null}
+          disabled={isPending}
         >
-          {loading === "reject" ? (
+          {pendingAction === "reject" ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             "Odbij"
@@ -85,10 +81,10 @@ export function NdaActions({ ndaId, status, listingId }: NdaActionsProps) {
         <Button
           size="sm"
           variant="outline"
-          className="w-full font-jakarta rounded-lg border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 h-9"
+          className="w-full rounded-none border-border hover:bg-muted h-9"
         >
-          <FileText className="w-3.5 h-3.5 mr-2 text-slate-400" />
-          Otvori Deal Room
+          <FileText className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+          Otvori deal room
         </Button>
       </Link>
     );

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, ShieldCheck, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
+import { saveSellerListingAction, type ActionResult } from "@/app/actions/dealflow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Card,
   CardContent,
@@ -23,32 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-const INDUSTRIES = [
-  "IT i Softver",
-  "Turizam i Ugostiteljstvo",
-  "Proizvodnja",
-  "Građevina",
-  "Trgovina i Logistika",
-  "Usluge",
-  "Zdravstvo",
-  "Ostalo",
-];
-const REGIONS = [
-  "Grad Zagreb",
-  "Zagrebačka",
-  "Splitsko-dalmatinska",
-  "Istarska",
-  "Primorsko-goranska",
-  "Osječko-baranjska",
-  "Zadarska",
-  "Ostalo",
-];
+import { INDUSTRIES, REGIONS } from "@/data/constants";
 
 export function SellerOnboardingForm() {
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [result, setResult] = useState<ActionResult | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
     company_name: "",
     industry: "",
@@ -61,174 +44,214 @@ export function SellerOnboardingForm() {
     asking_price: "",
     reason_for_sale: "",
     transition_support: "",
+    owner_dependency_score: 3,
+    digital_maturity: 3,
   });
 
+  const stepValidity = useMemo(
+    () => ({
+      1:
+        formData.company_name.trim().length >= 2 &&
+        formData.industry &&
+        formData.region &&
+        formData.year_founded &&
+        formData.employees,
+      2:
+        formData.revenue &&
+        formData.ebitda &&
+        formData.asking_price &&
+        Number(formData.asking_price) >= 0,
+      3:
+        formData.reason_for_sale.trim().length >= 12 &&
+        formData.transition_support.trim().length >= 12,
+    }),
+    [formData],
+  );
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target;
+    const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string | null) => {
-    setFormData((prev) => ({ ...prev, [name]: value || "" }));
+    setFormData((prev) => ({ ...prev, [name]: value ?? "" }));
   };
 
-  const handleNext = () => setStep((s) => Math.min(s + 1, 3));
-  const handleBack = () => setStep((s) => Math.max(s - 1, 1));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/listings/create-teaser", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Failed to submit listing");
-      setIsSuccess(true);
-    } catch (error) {
-      console.error(error);
-      toast.error("Dogodila se pogreška. Molimo pokušajte ponovno.");
-    } finally {
-      setIsLoading(false);
+  const handleNext = () => {
+    if (!stepValidity[step as keyof typeof stepValidity]) {
+      toast.error("Prije nastavka ispunite sva obavezna polja u ovom koraku.");
+      return;
     }
+
+    setStep((current) => Math.min(current + 1, 3));
   };
 
-  if (isSuccess) {
+  const handleBack = () => {
+    setStep((current) => Math.max(current - 1, 1));
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!stepValidity[3]) {
+      toast.error("Dodajte razlog prodaje i plan tranzicije prije slanja.");
+      return;
+    }
+
+    const payload = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      payload.set(key, String(value));
+    });
+
+    startTransition(async () => {
+      const nextResult = await saveSellerListingAction(payload);
+      setResult(nextResult);
+
+      if (nextResult.error) {
+        toast.error(nextResult.error);
+        return;
+      }
+
+      toast.success(
+        nextResult.message ||
+          "Teaser je generiran. Pregledajte ga prije objave u marketplaceu.",
+      );
+    });
+  };
+
+  if (result?.success) {
     return (
-      <Card className="border border-white/5 bg-card rounded-none max-w-2xl mx-auto text-center py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+      <Card className="border border-border bg-card rounded-none max-w-3xl mx-auto text-center py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(21,101,192,0.12),transparent_60%)] pointer-events-none" />
         <CardContent className="flex flex-col items-center justify-center space-y-8 relative z-10">
-          <div className="p-5 border border-primary/30 text-primary">
-            <CheckCircle className="w-8 h-8" strokeWidth={1} />
+          <div className="p-5 border border-primary/30 text-primary bg-primary/5">
+            <CheckCircle className="w-8 h-8" strokeWidth={1.5} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-heading text-foreground tracking-tighter leading-tight">
-              Aplikacija zaprimljena.
+          <div className="space-y-4 max-w-xl">
+            <h2 className="text-3xl font-heading text-foreground tracking-tight leading-tight">
+              Teaser je spreman za pregled.
             </h2>
-            <p className="text-muted-foreground font-light max-w-md mx-auto leading-relaxed tracking-wide">
-              Vaši podaci su sigurno pohranjeni. Naša AI tehnologija trenutno
-              generira vaš Slijepi Teaser. Bit ćete preusmjereni na nadzornu
-              ploču gdje ga možete pregledati i odobriti.
+            <p className="text-muted-foreground leading-relaxed">
+              Vaš oglas je spremljen u statusu pregleda prodavatelja. Na
+              dashboardu ga možete pregledati, potvrditi i tek tada objaviti u
+              marketplaceu.
             </p>
+            {result.publicCode ? (
+              <p className="text-sm text-foreground">
+                Javna šifra oglasa:{" "}
+                <span className="font-semibold tracking-wider">{result.publicCode}</span>
+              </p>
+            ) : null}
           </div>
-          <Button
-            className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none h-14 px-10 text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all"
-            onClick={() => (window.location.href = "/dashboard/seller")}
-          >
-            Nadzorna Ploča
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href="/dashboard/seller">
+              <Button className="h-12 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-[0.18em] text-xs">
+                Otvori dashboard
+              </Button>
+            </Link>
+            <Link href="/valuate">
+              <Button variant="outline" className="h-12 px-8 rounded-none">
+                Ponovi procjenu
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="border-white/5 bg-card/50 backdrop-blur-md rounded-none relative overflow-hidden">
-      {/* Progress Bar */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-white/5 z-20">
+    <Card className="border-border bg-card/70 backdrop-blur-sm rounded-none relative overflow-hidden">
+      <div className="absolute top-0 left-0 h-1 bg-muted/60 w-full">
         <motion.div
           className="h-full bg-primary"
           initial={{ width: "33.33%" }}
           animate={{ width: `${(step / 3) * 100}%` }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
 
-      <CardHeader className="pt-12 px-10 border-b border-white/5 pb-8">
+      <CardHeader className="pt-12 px-8 md:px-10 border-b border-border pb-8">
         <div className="flex items-center gap-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-primary mb-4">
           <ShieldCheck className="w-3.5 h-3.5" />
-          Povjerljivo & Kriptirano
+          Povjerljivo i spremno za pregled
         </div>
-        <CardTitle className="text-2xl md:text-3xl font-heading text-foreground tracking-tighter">
+        <CardTitle className="text-2xl md:text-3xl font-heading text-foreground tracking-tight">
           Korak {step} / 3
         </CardTitle>
-        <CardDescription className="text-base text-muted-foreground font-light mt-2 tracking-wide">
-          Unesite točne podatke za najbolju AI procjenu i izradu teasera.
+        <CardDescription className="text-base text-muted-foreground mt-2 leading-relaxed">
+          Unosite interne podatke koji ostaju skriveni kupcima dok ne odobrite
+          teaser i dok NDA nije potpisan.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="px-8 pb-6 relative z-10">
-        <form onSubmit={handleSubmit}>
+      <CardContent className="px-8 md:px-10 pb-6 relative z-10">
+        <form id="seller-onboarding-form" onSubmit={handleSubmit}>
           <AnimatePresence mode="wait">
-            {step === 1 && (
+            {step === 1 ? (
               <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 60 }}
+                key="seller-step-1"
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Naziv tvrtke{" "}
-                    <span className="text-muted-foreground/70 font-normal">
-                      (Neće biti prikazano kupcima)
-                    </span>
-                  </Label>
+                  <Label htmlFor="company_name">Naziv tvrtke</Label>
                   <Input
+                    id="company_name"
                     name="company_name"
                     value={formData.company_name}
                     onChange={handleChange}
-                    required
-                    placeholder="Npr. DealFlow d.o.o."
-                    className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                    placeholder="Npr. Adria Industrija d.o.o."
+                    className="h-12 rounded-none"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Ovaj podatak koristi se samo interno i nikad se ne prikazuje
+                    u blind teaseru.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Industrija (NKD sektor)
-                    </Label>
+                    <Label>Industrija</Label>
                     <Select
                       value={formData.industry}
-                      onValueChange={(val) =>
-                        handleSelectChange("industry", val)
+                      onValueChange={(value) =>
+                        handleSelectChange("industry", value)
                       }
-                      required
                     >
-                      <SelectTrigger className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all">
+                      <SelectTrigger className="h-12 rounded-none">
                         <SelectValue placeholder="Odaberite industriju" />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
-                        {INDUSTRIES.map((i) => (
-                          <SelectItem
-                            key={i}
-                            value={i}
-                            className="focus:bg-white/5 cursor-pointer rounded-none"
-                          >
-                            {i}
+                      <SelectContent className="rounded-none">
+                        {INDUSTRIES.map((industry) => (
+                          <SelectItem key={industry} value={industry}>
+                            {industry}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Regija
-                    </Label>
+                    <Label>Regija</Label>
                     <Select
                       value={formData.region}
-                      onValueChange={(val) => handleSelectChange("region", val)}
-                      required
+                      onValueChange={(value) =>
+                        handleSelectChange("region", value)
+                      }
                     >
-                      <SelectTrigger className="h-12 bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-df-trust-blue/50 transition-all">
+                      <SelectTrigger className="h-12 rounded-none">
                         <SelectValue placeholder="Odaberite regiju" />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
-                        {REGIONS.map((r) => (
-                          <SelectItem
-                            key={r}
-                            value={r}
-                            className="focus:bg-white/5 cursor-pointer rounded-none"
-                          >
-                            {r}
+                      <SelectContent className="rounded-none">
+                        {REGIONS.map((region) => (
+                          <SelectItem key={region} value={region}>
+                            {region}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -238,186 +261,223 @@ export function SellerOnboardingForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Godina osnivanja
-                    </Label>
+                    <Label htmlFor="year_founded">Godina osnivanja</Label>
                     <Input
-                      type="number"
+                      id="year_founded"
                       name="year_founded"
+                      type="number"
                       value={formData.year_founded}
                       onChange={handleChange}
-                      required
-                      placeholder="Npr. 2010"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="2012"
+                      className="h-12 rounded-none"
                     />
                   </div>
+
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Broj zaposlenika
-                    </Label>
+                    <Label htmlFor="employees">Broj zaposlenih</Label>
                     <Input
-                      type="number"
+                      id="employees"
                       name="employees"
+                      type="number"
                       value={formData.employees}
                       onChange={handleChange}
-                      required
-                      placeholder="Npr. 15"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="18"
+                      className="h-12 rounded-none"
                     />
                   </div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {step === 2 && (
+            {step === 2 ? (
               <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 60 }}
+                key="seller-step-2"
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Godišnji prihod (EUR)
-                    </Label>
+                    <Label htmlFor="revenue">Godišnji prihod (EUR)</Label>
                     <Input
-                      type="number"
+                      id="revenue"
                       name="revenue"
+                      type="number"
                       value={formData.revenue}
                       onChange={handleChange}
-                      required
-                      placeholder="500000"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="850000"
+                      className="h-12 rounded-none"
                     />
                   </div>
+
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      EBITDA (EUR)
-                    </Label>
+                    <Label htmlFor="ebitda">EBITDA (EUR)</Label>
                     <Input
-                      type="number"
+                      id="ebitda"
                       name="ebitda"
+                      type="number"
                       value={formData.ebitda}
                       onChange={handleChange}
-                      required
-                      placeholder="100000"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="190000"
+                      className="h-12 rounded-none"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    SDE - Zarada vlasnika (EUR){" "}
-                    <span className="text-muted-foreground/70 font-normal">
-                      - Opcionalno
-                    </span>
-                  </Label>
-                  <Input
-                    type="number"
-                    name="sde"
-                    value={formData.sde}
-                    onChange={handleChange}
-                    placeholder="Najčešće više od EBITDA"
-                    className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-3">
+                    <Label htmlFor="sde">SDE (EUR)</Label>
+                    <Input
+                      id="sde"
+                      name="sde"
+                      type="number"
+                      value={formData.sde}
+                      onChange={handleChange}
+                      placeholder="220000"
+                      className="h-12 rounded-none"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Unesite ako ga pratite. Ako ne, procjena se i dalje može
+                      napraviti.
+                    </p>
+                  </div>
 
-                <div className="space-y-4 p-6 bg-white/[0.02] border border-white/10 relative">
-                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                  <Label className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">
-                    Željena cijena prodaje (EUR)
-                  </Label>
-                  <Input
-                    type="number"
-                    name="asking_price"
-                    value={formData.asking_price}
-                    onChange={handleChange}
-                    required
-                    placeholder="Potrebno za teaser"
-                    className="h-14 bg-background border-white/20 rounded-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-heading font-medium text-xl text-foreground placeholder:text-muted-foreground/30 px-6"
-                  />
+                  <div className="space-y-3">
+                    <Label htmlFor="asking_price">Tražena cijena (EUR)</Label>
+                    <Input
+                      id="asking_price"
+                      name="asking_price"
+                      type="number"
+                      value={formData.asking_price}
+                      onChange={handleChange}
+                      placeholder="1200000"
+                      className="h-12 rounded-none"
+                    />
+                  </div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {step === 3 && (
+            {step === 3 ? (
               <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 60 }}
+                key="seller-step-3"
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="space-y-6"
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
+                className="space-y-8"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Razlog prodaje
-                  </Label>
+                  <Label htmlFor="reason_for_sale">Razlog prodaje</Label>
                   <Textarea
+                    id="reason_for_sale"
                     name="reason_for_sale"
                     value={formData.reason_for_sale}
                     onChange={handleChange}
-                    required
-                    placeholder="Zašto prodajete tvrtku? (Npr. Umirovljenje, fokus na druge projekte...)"
                     rows={4}
-                    className="resize-none min-h-[120px] bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50 leading-relaxed p-4"
+                    className="resize-none rounded-none"
+                    placeholder="Npr. planirano umirovljenje i prijenos poslovanja uz očuvanje tima."
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Spremnost na prijelazni period (Tranzicija)
-                  </Label>
+                  <Label htmlFor="transition_support">Plan tranzicije</Label>
                   <Textarea
+                    id="transition_support"
                     name="transition_support"
                     value={formData.transition_support}
                     onChange={handleChange}
-                    required
-                    placeholder="Koliko dugo ste spremni ostati u tvrtki kako bi pomogli novom vlasniku? (Npr. 3 do 6 mjeseci uz savjetovanje)"
                     rows={4}
-                    className="resize-none min-h-[120px] bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50 leading-relaxed p-4"
+                    className="resize-none rounded-none"
+                    placeholder="Npr. vlasnik ostaje 6 mjeseci radi prijenosa odnosa s klijentima i procesa."
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4 border border-border p-5">
+                    <Label className="text-base">Ovisnost poslovanja o vlasniku</Label>
+                    <Slider
+                      value={[formData.owner_dependency_score]}
+                      min={1}
+                      max={5}
+                      step={1}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          owner_dependency_score: Array.isArray(value)
+                            ? (value[0] ?? 3)
+                            : value,
+                        }))
+                      }
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>1 - niska</span>
+                      <span>5 - visoka</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 border border-border p-5">
+                    <Label className="text-base">Digitalna zrelost procesa</Label>
+                    <Slider
+                      value={[formData.digital_maturity]}
+                      min={1}
+                      max={5}
+                      step={1}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          digital_maturity: Array.isArray(value)
+                            ? (value[0] ?? 3)
+                            : value,
+                        }))
+                      }
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>1 - ručno</span>
+                      <span>5 - strukturirano</span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-white/5 pt-8 px-10 pb-10 relative z-10">
+      <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-border pt-8 px-8 md:px-10 pb-10">
         <Button
           variant="outline"
           onClick={handleBack}
-          disabled={step === 1 || isLoading}
-          className="w-full sm:w-auto rounded-none border-white/10 bg-transparent hover:bg-white/5 text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all h-14 px-10"
+          disabled={step === 1 || isPending}
+          className="w-full sm:w-auto rounded-none"
         >
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Natrag
         </Button>
+
         {step < 3 ? (
           <Button
             onClick={handleNext}
-            className="w-full sm:w-auto bg-white text-black hover:bg-white/90 rounded-none text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all h-14 px-10"
+            className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90"
           >
-            Sljedeći Korak <ArrowRight className="w-4 h-4 ml-2" />
+            Sljedeći korak
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
           <Button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-[0.75rem] font-bold tracking-[0.2em] uppercase transition-all h-14 px-10"
+            onClick={() => {
+              (
+                document.getElementById(
+                  "seller-onboarding-form",
+                ) as HTMLFormElement | null
+              )?.requestSubmit();
+            }}
+            disabled={isPending}
+            className="w-full sm:w-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <ShieldCheck className="w-4 h-4 mr-2" />
-            )}
-            {isLoading
-              ? "Kriptiranje..."
-              : "Spremi & Generiraj"}
+            {isPending ? "Generiranje teasera..." : "Spremi i generiraj teaser"}
           </Button>
         )}
       </CardFooter>

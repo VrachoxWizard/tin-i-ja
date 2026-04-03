@@ -15,19 +15,21 @@ export async function login(formData: FormData) {
   const { error, data: authData } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/login?error=Autentikacija nije uspjela')
+    redirect('/login?error=auth_failed')
   }
 
   // Determine dashboard based on user role
   let dashboardPath = '/dashboard/buyer'
   if (authData.user) {
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('users')
       .select('role')
       .eq('id', authData.user.id)
       .single()
 
-    if (profile?.role === 'seller') {
+    if (profileData?.role === 'admin') {
+      dashboardPath = '/dashboard/admin'
+    } else if (profileData?.role === 'seller') {
       dashboardPath = '/dashboard/seller'
     }
   }

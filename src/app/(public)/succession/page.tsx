@@ -1,91 +1,74 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight, Building2, ShieldCheck, TimerReset, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, ShieldCheck, Building2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Planiranje Nasljeđivanja | DealFlow",
+  title: "Planiranje nasljeđivanja | DealFlow",
   description:
-    "Strateško planiranje nasljeđivanja vaše tvrtke. Osigurajte budućnost vašeg poslovanja s DealFlow platformom.",
+    "Pripremite tvrtku za prijenos vlasništva kroz procjenu spremnosti, strukturirani plan i kontroliranu tranziciju.",
   alternates: { canonical: "/succession" },
 };
 
 export default function SuccessionPage() {
   return (
     <div className="flex flex-col bg-background">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Ambient background */}
-        <div className="absolute inset-0 bg-navy" />
-        <div className="absolute top-[-15%] right-[-10%] w-125 h-125 bg-gold/15 rounded-full blur-[140px] gpu-layer" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-100 h-100 bg-trust/10 rounded-full blur-[120px] gpu-layer" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        <div className="container relative z-10 mx-auto px-4 max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium tracking-wide mb-8 backdrop-blur-sm">
-            <Clock className="w-3.5 h-3.5 text-gold" />
-            Uskoro Dostupno
+      <section className="relative border-b border-border bg-muted/20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(21,101,192,0.08),transparent_42%)]" />
+        <div className="container relative mx-auto max-w-6xl px-4 pt-18 pb-16 sm:pt-24 sm:pb-20">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-4">
+              Prijenos vlasništva
+            </p>
+            <h1>Strukturirajte nasljeđivanje prije nego što postane hitno.</h1>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              Plan prijenosa vlasništva treba obuhvatiti spremnost tima,
+              dokumentiranost procesa, kontinuitet odnosa s klijentima i jasan
+              vremenski plan tranzicije.
+            </p>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
-            Planiranje{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-gold via-yellow-200 to-gold">
-              nasljeđivanja
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12">
-            Strateški pristup prijenosu vlasništva vaše tvrtke. Osigurajte
-            kontinuitet poslovanja, zaštitite zaposlenike i maksimizirajte
-            vrijednost za sljedeću generaciju.
-          </p>
-
-          {/* Feature preview */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto mb-16">
+          <div className="mt-10 grid gap-4 md:grid-cols-4">
             {[
               {
                 icon: Building2,
-                label: "Procjena spremnosti",
-                desc: "Analiza vaše tvrtke za prijenos",
+                title: "Spremnost tvrtke",
+                body: "Procjena ovisnosti o vlasniku, procesa i operativne zrelosti.",
+              },
+              {
+                icon: Users,
+                title: "Prijenos odnosa",
+                body: "Mapiranje ključnih kupaca, zaposlenika i odgovornosti.",
               },
               {
                 icon: ShieldCheck,
-                label: "Pravna zaštita",
-                desc: "Sukladnost s HR zakonodavstvom",
+                title: "Kontrola rizika",
+                body: "Rano zatvaranje pravnih i operativnih slabih točaka.",
               },
               {
-                icon: Clock,
-                label: "Vremenski plan",
-                desc: "Strukturirani proces prijenosa",
+                icon: TimerReset,
+                title: "Vremenski plan",
+                body: "Tranzicija koja štiti vrijednost tvrtke i kontinuitet poslovanja.",
               },
-            ].map(({ icon: Icon, label, desc }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-3 px-4 py-5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
-              >
-                <div className="w-10 h-10 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-gold" />
-                </div>
-                <span className="text-sm text-white font-medium">{label}</span>
-                <span className="text-xs text-slate-500">{desc}</span>
+            ].map(({ icon: Icon, title, body }) => (
+              <div key={title} className="border border-border bg-card p-5">
+                <Icon className="w-5 h-5 text-primary mb-4" />
+                <h2 className="text-xl font-heading text-foreground mb-2">{title}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
 
-          {/* CTA */}
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-slate-500 mb-2">
-              Budite među prvima koji će koristiti ovu uslugu.
-            </p>
+          <div className="mt-10 flex flex-col sm:flex-row gap-3">
             <Link href="/valuate">
-              <Button className="h-12 px-8 rounded-full bg-gold hover:bg-gold/90 text-navy font-heading font-bold text-base shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all">
-                Procijeni vrijednost tvrtke
-                <ArrowRight className="ml-2 w-4 h-4" />
+              <Button className="rounded-none bg-df-trust-blue text-white hover:bg-df-trust-blue/90">
+                Procijeni spremnost tvrtke
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button variant="outline" className="rounded-none">
+                Razgovarajmo o tranziciji
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
           </div>

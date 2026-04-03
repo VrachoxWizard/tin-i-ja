@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, Target, CheckCircle } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, CheckCircle, Target } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
+import {
+  saveBuyerProfileAction,
+  type ActionResult,
+} from "@/app/actions/dealflow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,189 +28,186 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-const INDUSTRIES = [
-  "IT i Softver",
-  "Turizam i Ugostiteljstvo",
-  "Proizvodnja",
-  "Građevina",
-  "Trgovina i Logistika",
-  "Usluge",
-  "Zdravstvo",
-  "Sve Industrijske Grane",
-];
-const REGIONS = [
-  "Grad Zagreb",
-  "Zagrebačka",
-  "Splitsko-dalmatinska",
-  "Istarska",
-  "Primorsko-goranska",
-  "Osječko-baranjska",
-  "Zadarska",
-  "Cijela Hrvatska",
-];
+import { BUYER_INDUSTRIES, REGIONS } from "@/data/constants";
 
 export function BuyerOnboardingForm() {
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [result, setResult] = useState<ActionResult | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
     buyer_type: "",
-    investment_min: "",
-    investment_max: "",
+    target_ev_min: "",
+    target_ev_max: "",
+    target_revenue_min: "",
+    target_revenue_max: "",
     target_industries: "",
     target_regions: "",
     investment_thesis: "",
   });
 
+  const stepValidity = useMemo(
+    () => ({
+      1:
+        !!formData.buyer_type &&
+        !!formData.target_ev_min &&
+        !!formData.target_ev_max &&
+        Number(formData.target_ev_min) <= Number(formData.target_ev_max),
+      2:
+        !!formData.target_revenue_min &&
+        !!formData.target_revenue_max &&
+        !!formData.target_industries &&
+        !!formData.target_regions &&
+        Number(formData.target_revenue_min) <=
+          Number(formData.target_revenue_max),
+      3: formData.investment_thesis.trim().length >= 12,
+    }),
+    [formData],
+  );
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target;
+    const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string | null) => {
-    setFormData((prev) => ({ ...prev, [name]: value || "" }));
+    setFormData((prev) => ({ ...prev, [name]: value ?? "" }));
   };
 
-  const handleNext = () => setStep((s) => Math.min(s + 1, 3));
-  const handleBack = () => setStep((s) => Math.max(s - 1, 1));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/buyers/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error("Failed to submit buyer profile");
-      setIsSuccess(true);
-    } catch (error) {
-      console.error(error);
-      toast.error("Dogodila se pogreška. Molimo pokušajte ponovno.");
-    } finally {
-      setIsLoading(false);
+  const handleNext = () => {
+    if (!stepValidity[step as keyof typeof stepValidity]) {
+      toast.error("Dovršite sva obavezna polja u ovom koraku prije nastavka.");
+      return;
     }
+
+    setStep((current) => Math.min(current + 1, 3));
   };
 
-  if (isSuccess) {
+  const handleBack = () => {
+    setStep((current) => Math.max(current - 1, 1));
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!stepValidity[3]) {
+      toast.error("Opišite svoju investicijsku tezu prije spremanja profila.");
+      return;
+    }
+
+    const payload = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      payload.set(key, value);
+    });
+
+    startTransition(async () => {
+      const nextResult = await saveBuyerProfileAction(payload);
+      setResult(nextResult);
+
+      if (nextResult.error) {
+        toast.error(nextResult.error);
+        return;
+      }
+
+      toast.success(
+        nextResult.message ||
+          "Investicijski profil je spremljen i uparivanja su ažurirana.",
+      );
+    });
+  };
+
+  if (result?.success) {
     return (
-      <Card className="border-white/10 bg-white/[0.02] border shadow-none max-w-2xl mx-auto text-center py-12 rounded-none relative overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none opacity-20"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 50%, var(--color-df-trust-blue) 0%, transparent 60%)",
-          }}
-        />
-        <CardContent className="flex flex-col items-center justify-center space-y-6 relative z-10">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="p-5 bg-primary/10 rounded-none text-primary mb-2 ring-1 ring-primary/20"
-          >
-            <CheckCircle className="w-12 h-12" />
-          </motion.div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground font-heading tracking-tight">
-              Profil Spremljen!
+      <Card className="border border-border bg-card rounded-none max-w-3xl mx-auto text-center py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(21,101,192,0.12),transparent_60%)] pointer-events-none" />
+        <CardContent className="flex flex-col items-center justify-center space-y-8 relative z-10">
+          <div className="p-5 border border-primary/30 text-primary bg-primary/5">
+            <CheckCircle className="w-8 h-8" strokeWidth={1.5} />
+          </div>
+          <div className="space-y-4 max-w-xl">
+            <h2 className="text-3xl font-heading text-foreground tracking-tight leading-tight">
+              Profil investitora je aktivan.
             </h2>
-            <p className="text-muted-foreground font-sans max-w-md mx-auto leading-relaxed">
-              Vaši investicijski kriteriji su uspješno dodani u naš DealFlow
-              Algoritam. Sada ste automatski povezani s oglasima koji odgovaraju
-              vašem profilu.
+            <p className="text-muted-foreground leading-relaxed">
+              Vaši kriteriji su spremljeni i DealFlow sada može automatski
+              izračunavati podudaranja s novim aktivnim prilikama.
             </p>
           </div>
-          <Button
-            variant="default"
-            className="mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-heading rounded-none h-12 px-8"
-            onClick={() => (window.location.href = "/listings")}
-          >
-            Pregledaj Tvrtke (Listings)
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href="/dashboard/buyer">
+              <Button className="h-12 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-[0.18em] text-xs">
+                Otvori dashboard
+              </Button>
+            </Link>
+            <Link href="/listings">
+              <Button variant="outline" className="h-12 px-8 rounded-none">
+                Pregledaj prilike
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="border-white/10 bg-white/[0.02] border shadow-none relative overflow-hidden rounded-none">
-      {/* Decorative gradients */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-trust/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[hsl(var(--df-gold))]/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
-
-      <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5 z-20 rounded-t-2xl overflow-hidden">
+    <Card className="border-border bg-card/70 backdrop-blur-sm rounded-none relative overflow-hidden">
+      <div className="absolute top-0 left-0 h-1 bg-muted/60 w-full">
         <motion.div
           className="h-full bg-primary"
           initial={{ width: "33.33%" }}
           animate={{ width: `${(step / 3) * 100}%` }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
 
-      <CardHeader className="pt-10 px-8">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-df-trust-blue mb-3">
-          <Target className="w-4 h-4" />
-          Pametni Algoritam
+      <CardHeader className="pt-12 px-8 md:px-10 border-b border-border pb-8">
+        <div className="flex items-center gap-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-primary mb-4">
+          <Target className="w-3.5 h-3.5" />
+          Kvalificirani investitorski profil
         </div>
-        <CardTitle className="text-3xl font-bold text-foreground font-heading tracking-tight">
-          Korak {step} od 3
+        <CardTitle className="text-2xl md:text-3xl font-heading text-foreground tracking-tight">
+          Korak {step} / 3
         </CardTitle>
-        <CardDescription className="text-base text-slate-500 dark:text-slate-400 font-inter mt-1">
-          Definirajte svoje investicijske parametre.
+        <CardDescription className="text-base text-muted-foreground mt-2 leading-relaxed">
+          Definirajte raspon transakcije, ciljane sektore i investicijsku tezu
+          kako bi algoritam mogao filtrirati relevantne prilike.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="px-8 pb-6 relative z-10">
-        <form onSubmit={handleSubmit}>
+      <CardContent className="px-8 md:px-10 pb-6 relative z-10">
+        <form id="buyer-onboarding-form" onSubmit={handleSubmit}>
           <AnimatePresence mode="wait">
-            {step === 1 && (
+            {step === 1 ? (
               <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 60 }}
+                key="buyer-step-1"
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Tip Investitora
-                  </Label>
+                  <Label>Tip investitora</Label>
                   <Select
                     value={formData.buyer_type}
-                    onValueChange={(val) =>
-                      handleSelectChange("buyer_type", val)
+                    onValueChange={(value) =>
+                      handleSelectChange("buyer_type", value)
                     }
-                    required
                   >
-                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
-                      <SelectValue placeholder="Odaberite tip" />
+                    <SelectTrigger className="h-12 rounded-none">
+                      <SelectValue placeholder="Odaberite profil investitora" />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
-                      <SelectItem
-                        value="individual"
-                        className="focus:bg-white/5 cursor-pointer rounded-none"
-                      >
-                        Fizička osoba / Individualni Poduzetnik
+                    <SelectContent className="rounded-none">
+                      <SelectItem value="individual">
+                        Fizička osoba / poduzetnik
                       </SelectItem>
-                      <SelectItem
-                        value="strategic"
-                        className="focus:bg-white/5 cursor-pointer rounded-none"
-                      >
-                        Strateški Investitor (Tvrtka / Korporacija)
+                      <SelectItem value="strategic">
+                        Strateški investitor
                       </SelectItem>
-                      <SelectItem
-                        value="financial"
-                        className="focus:bg-white/5 cursor-pointer rounded-none"
-                      >
-                        Financijski Investitor (PE / VC Fond)
+                      <SelectItem value="financial">
+                        Financijski investitor
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -213,165 +215,190 @@ export function BuyerOnboardingForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Minimalna Investicija (EUR)
-                    </Label>
+                    <Label htmlFor="target_ev_min">Minimalni EV (EUR)</Label>
                     <Input
+                      id="target_ev_min"
+                      name="target_ev_min"
                       type="number"
-                      name="investment_min"
-                      value={formData.investment_min}
+                      value={formData.target_ev_min}
                       onChange={handleChange}
-                      required
-                      placeholder="Npr. 50000"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="150000"
+                      className="h-12 rounded-none"
                     />
                   </div>
+
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                      Maksimalna Investicija (EUR)
-                    </Label>
+                    <Label htmlFor="target_ev_max">Maksimalni EV (EUR)</Label>
                     <Input
+                      id="target_ev_max"
+                      name="target_ev_max"
                       type="number"
-                      name="investment_max"
-                      value={formData.investment_max}
+                      value={formData.target_ev_max}
                       onChange={handleChange}
-                      required
-                      placeholder="Npr. 2000000"
-                      className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50"
+                      placeholder="2500000"
+                      className="h-12 rounded-none"
                     />
                   </div>
                 </div>
-              </motion.div>
-            )}
 
-            {step === 2 && (
+                <p className="text-xs text-muted-foreground">
+                  EV raspon koristimo kao najvažniji signal za algoritamsko
+                  uparivanje s aktivnim oglasima.
+                </p>
+              </motion.div>
+            ) : null}
+
+            {step === 2 ? (
               <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 60 }}
+                key="buyer-step-2"
+                initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-3">
+                    <Label htmlFor="target_revenue_min">
+                      Minimalni prihod (EUR)
+                    </Label>
+                    <Input
+                      id="target_revenue_min"
+                      name="target_revenue_min"
+                      type="number"
+                      value={formData.target_revenue_min}
+                      onChange={handleChange}
+                      placeholder="300000"
+                      className="h-12 rounded-none"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="target_revenue_max">
+                      Maksimalni prihod (EUR)
+                    </Label>
+                    <Input
+                      id="target_revenue_max"
+                      name="target_revenue_max"
+                      type="number"
+                      value={formData.target_revenue_max}
+                      onChange={handleChange}
+                      placeholder="5000000"
+                      className="h-12 rounded-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-3">
+                    <Label>Primarni sektor interesa</Label>
+                    <Select
+                      value={formData.target_industries}
+                      onValueChange={(value) =>
+                        handleSelectChange("target_industries", value)
+                      }
+                    >
+                      <SelectTrigger className="h-12 rounded-none">
+                        <SelectValue placeholder="Odaberite sektor" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        {BUYER_INDUSTRIES.map((industry) => (
+                          <SelectItem key={industry} value={industry}>
+                            {industry}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Primarna regija</Label>
+                    <Select
+                      value={formData.target_regions}
+                      onValueChange={(value) =>
+                        handleSelectChange("target_regions", value)
+                      }
+                    >
+                      <SelectTrigger className="h-12 rounded-none">
+                        <SelectValue placeholder="Odaberite regiju" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        {REGIONS.map((region) => (
+                          <SelectItem key={region} value={region}>
+                            {region}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
+
+            {step === 3 ? (
+              <motion.div
+                key="buyer-step-3"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: "spring", stiffness: 260, damping: 28 }}
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Primarni Sektor Interesa
-                  </Label>
-                  <Select
-                    value={formData.target_industries}
-                    onValueChange={(val) =>
-                      handleSelectChange("target_industries", val)
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
-                      <SelectValue placeholder="Odaberite industriju" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
-                      {INDUSTRIES.map((i) => (
-                        <SelectItem
-                          key={i}
-                          value={i}
-                          className="focus:bg-white/5 cursor-pointer rounded-none"
-                        >
-                          {i}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Primarna Regija
-                  </Label>
-                  <Select
-                    value={formData.target_regions}
-                    onValueChange={(val) =>
-                      handleSelectChange("target_regions", val)
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50">
-                      <SelectValue placeholder="Odaberite regiju" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border border-white/10 rounded-none font-sans text-foreground">
-                      {REGIONS.map((r) => (
-                        <SelectItem
-                          key={r}
-                          value={r}
-                          className="focus:bg-white/5 cursor-pointer rounded-none"
-                        >
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 60 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -60 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="space-y-6"
-              >
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-muted-foreground font-medium">
-                    Investicijska Teza i Motivacija
+                  <Label htmlFor="investment_thesis">
+                    Investicijska teza i motivacija
                   </Label>
                   <Textarea
+                    id="investment_thesis"
                     name="investment_thesis"
                     value={formData.investment_thesis}
                     onChange={handleChange}
-                    required
-                    placeholder="Zašto kupujete tvrtku? (Npr. Širenje tržišnog udjela, akvizicija tehnologije, stabilan prihod za samostalan rad...)"
                     rows={5}
-                    className="resize-none min-h-[120px] bg-white/5 border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground placeholder:text-muted-foreground/50 leading-relaxed p-4"
+                    className="resize-none rounded-none"
+                    placeholder="Objasnite koje sinergije, tržišta ili operativne ciljeve želite postići ovom akvizicijom."
                   />
-                  <p className="text-xs text-slate-500 font-medium">
-                    Ova informacija pomaže prodavateljima da vas procijene prije
-                    odobrenja NDA-a.
+                  <p className="text-xs text-muted-foreground">
+                    Ovaj sažetak vide prodavatelji kada procjenjuju NDA zahtjev.
                   </p>
                 </div>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-slate-200/50 dark:border-slate-800/50 pt-6 px-8 pb-8 relative z-10">
+      <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-border pt-8 px-8 md:px-10 pb-10">
         <Button
           variant="outline"
           onClick={handleBack}
-          disabled={step === 1 || isLoading}
-          className="w-full sm:w-auto font-heading rounded-none border border-white/10 bg-transparent hover:bg-white/5 transition-colors h-12 px-6"
+          disabled={step === 1 || isPending}
+          className="w-full sm:w-auto rounded-none"
         >
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Natrag
         </Button>
+
         {step < 3 ? (
           <Button
             onClick={handleNext}
-            className="w-full sm:w-auto bg-foreground hover:bg-white/90 text-background font-heading rounded-none h-12 px-6"
+            className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90"
           >
-            Sljedeći Korak <ArrowRight className="w-4 h-4 ml-2" />
+            Sljedeći korak
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
           <Button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-heading rounded-none h-12 px-6"
+            onClick={() => {
+              (
+                document.getElementById(
+                  "buyer-onboarding-form",
+                ) as HTMLFormElement | null
+              )?.requestSubmit();
+            }}
+            disabled={isPending}
+            className="w-full sm:w-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Target className="w-4 h-4 mr-2" />
-            )}
-            {isLoading ? "Profiliranje..." : "Kreiraj Investicijski Profil"}
+            {isPending ? "Spremanje profila..." : "Spremi investicijski profil"}
           </Button>
         )}
       </CardFooter>

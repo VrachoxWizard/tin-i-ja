@@ -1,83 +1,63 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { Sparkles, Clock, ShieldCheck } from "lucide-react";
+import { Clock, ShieldCheck, Sparkles } from "lucide-react";
 
 const ValuatorWizard = dynamic(
   () =>
     import("@/components/features/ValuatorWizard").then(
-      (mod) => mod.ValuatorWizard
+      (mod) => mod.ValuatorWizard,
     ),
   {
     loading: () => (
-      <div className="h-[500px] animate-pulse bg-white/[0.02] border border-white/10 rounded-none" />
+      <div className="h-[500px] animate-pulse bg-card border border-border rounded-none" />
     ),
-  }
+  },
 );
 
 export const metadata: Metadata = {
-  title: "AI Procjena Vrijednosti Tvrtke",
+  title: "AI procjena vrijednosti tvrtke | DealFlow",
   description:
-    "Besplatna AI procjena vrijednosti vaše tvrtke. Saznajte raspone valuacije u minutama — anonimno i povjerljivo.",
+    "Anonimna AI procjena vrijednosti tvrtke s EBITDA i SDE rasponima te sell-readiness scoreom.",
   alternates: { canonical: "/valuate" },
 };
 
 export default function ValuatePage() {
   return (
     <div className="flex flex-col bg-background">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Ambient background */}
-        <div className="absolute inset-0 bg-navy" />
-        <div className="absolute top-[-10%] left-[20%] w-150 h-150 bg-gold/15 rounded-full blur-[160px] gpu-layer" />
-        <div className="absolute bottom-[-20%] right-[10%] w-100 h-100 bg-trust/10 rounded-full blur-[120px] gpu-layer" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        <div className="container relative z-10 mx-auto px-4 max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium tracking-wide mb-8 backdrop-blur-sm">
-            <Sparkles className="w-3.5 h-3.5 text-gold" />
-            AI Valuator — Besplatno
+      <section className="relative border-b border-border bg-muted/20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(21,101,192,0.08),transparent_42%)]" />
+        <div className="container relative mx-auto max-w-6xl px-4 pt-18 pb-16 sm:pt-24 sm:pb-20">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-4">
+              AI valuator
+            </p>
+            <h1>Saznajte raspon vrijednosti prije izlaska na tržište.</h1>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              Unesite osnovne financijske i operativne pokazatelje te dobijte
+              inicijalni EBITDA i SDE raspon zajedno sa sell-readiness scoreom i
+              preporukama za povećanje atraktivnosti tvrtke.
+            </p>
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight mb-6 leading-[1.05]">
-            <span className="text-white">Koliko vrijedi </span>
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-gold via-yellow-200 to-gold">
-              vaša tvrtka?
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            Anonimno, brzo i podržano najnovijom M&A analitikom za hrvatsko
-            tržište. Saznajte raspone vrijednosti u minutama.
-          </p>
-
-          {/* Social proof + feature badges */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+          <div className="mt-10 flex flex-wrap gap-3">
             {[
-              { icon: Clock, text: "Rezultat za 2 minute" },
-              { icon: ShieldCheck, text: "100% anonimno" },
-              { icon: Sparkles, text: "250+ procjena generirano" },
+              { icon: Clock, text: "Rezultat za nekoliko minuta" },
+              { icon: ShieldCheck, text: "Podaci ostaju povjerljivi" },
+              { icon: Sparkles, text: "AI narativ i preporuke" },
             ].map(({ icon: Icon, text }) => (
               <div
                 key={text}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm"
+                className="flex items-center gap-2 border border-border bg-card px-4 py-3 text-sm text-muted-foreground"
               >
-                <Icon className="w-3.5 h-3.5 text-gold/80" />
-                <span className="text-xs text-slate-400 font-medium">
-                  {text}
-                </span>
+                <Icon className="w-4 h-4 text-primary" />
+                {text}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Wizard Section */}
-      <section className="relative -mt-6 pb-20">
+      <section className="py-14">
         <div className="container mx-auto px-4 max-w-3xl">
           <ValuatorWizard />
         </div>

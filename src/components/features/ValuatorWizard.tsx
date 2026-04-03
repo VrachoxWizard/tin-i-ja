@@ -1,142 +1,191 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
+  Factory,
+  Lock,
+  Monitor,
+  Palmtree,
+  ShoppingCart,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
+import type { ValuationResponse } from "@/lib/contracts";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { GlowCard } from "@/components/ui/GlowCard";
-import { sanitizeHtml } from "@/lib/sanitize";
-import Link from "next/link";
-import {
-  Monitor,
-  Palmtree,
-  ShoppingCart,
-  Factory,
-  Briefcase,
-  Lock,
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle2,
-} from "lucide-react";
+import { VALUATOR_INDUSTRIES } from "@/data/constants";
 
 const INDUSTRIES = [
-  { id: "IT_Software", label: "IT i Softver", icon: Monitor },
-  { id: "Turizam", label: "Turizam", icon: Palmtree },
-  { id: "Trgovina", label: "Trgovina", icon: ShoppingCart },
-  { id: "Proizvodnja", label: "Proizvodnja", icon: Factory },
-  { id: "Usluge", label: "Usluge", icon: Briefcase },
+  { id: VALUATOR_INDUSTRIES[0], label: "IT i Softver", icon: Monitor },
+  { id: VALUATOR_INDUSTRIES[1], label: "Turizam i Ugostiteljstvo", icon: Palmtree },
+  { id: VALUATOR_INDUSTRIES[2], label: "Trgovina i Logistika", icon: ShoppingCart },
+  { id: VALUATOR_INDUSTRIES[3], label: "Proizvodnja", icon: Factory },
+  { id: VALUATOR_INDUSTRIES[4], label: "Usluge", icon: Briefcase },
 ];
+
+const stepVariants: Variants = {
+  hidden: { opacity: 0, x: 32, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+    transition: { type: "spring", stiffness: 260, damping: 26 },
+  },
+  exit: {
+    opacity: 0,
+    x: -32,
+    filter: "blur(4px)",
+    transition: { duration: 0.2 },
+  },
+};
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("hr-HR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export function ValuatorWizard() {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [result, setResult] = useState<{
-    html: string;
-    ranges: Record<string, [number, number]>;
-  } | null>(null);
-
+  const [result, setResult] = useState<ValuationResponse | null>(null);
   const [formData, setFormData] = useState({
     industry: "",
-    revenue: 0,
-    ebitda: 0,
-    sde: 0,
+    revenue: "",
+    ebitda: "",
+    sde: "",
     dependency: 3,
     maturity: 3,
   });
 
-  // Simulated loading progress for the "Generating" step
+  const stepValidity = useMemo(
+    () => ({
+      1: !!formData.industry,
+      2:
+        Number(formData.revenue) > 0 &&
+        Number(formData.ebitda) >= 0 &&
+        Number(formData.sde) >= 0,
+      3: formData.dependency >= 1 && formData.maturity >= 1,
+    }),
+    [formData],
+  );
+
   useEffect(() => {
-    if (loading) {
-      const interval = setInterval(() => {
-        setLoadingProgress((p) => {
-          if (p >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return p + 2;
-        });
-      }, 50);
-      return () => clearInterval(interval);
+    if (!isLoading) {
+      return;
     }
-  }, [loading]);
 
-  const handleNext = () => setStep((s) => Math.min(s + 1, 5));
-  const handlePrev = () => setStep((s) => Math.max(s - 1, 1));
-
-  const handleSubmit = async () => {
-    setLoadingProgress(0);
-    setLoading(true);
-    setStep(4); // Move to loading screen
-
-    try {
-      const res = await fetch("/api/valuate", {
-        method: "POST",
-        body: JSON.stringify(formData),
+    const interval = setInterval(() => {
+      setLoadingProgress((current) => {
+        if (current >= 96) {
+          return current;
+        }
+        return current + 4;
       });
-      const data = await res.json();
+    }, 120);
 
-      // Ensure the mock loading takes at least 2.5s for dramatic effect
-      setTimeout(() => {
-        setResult(data);
-        setStep(5);
-        setLoading(false);
-      }, 2500);
-    } catch (err) {
-      console.error(err);
-      toast.error("Procjena nije uspjela. Pokušajte ponovno.");
-      setLoading(false);
-      setStep(3); // Revert on error
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const goNext = () => {
+    if (!stepValidity[step as keyof typeof stepValidity]) {
+      toast.error("Dovršite obavezna polja u ovom koraku prije nastavka.");
+      return;
     }
+
+    setStep((current) => Math.min(current + 1, 3));
   };
 
-  const stepVariants: Variants = {
-    hidden: { opacity: 0, x: 40, filter: "blur(4px)" },
-    visible: {
-      opacity: 1,
-      x: 0,
-      filter: "blur(0px)",
-      transition: { type: "spring" as const, stiffness: 300, damping: 30 },
-    },
-    exit: {
-      opacity: 0,
-      x: -40,
-      filter: "blur(4px)",
-      transition: { duration: 0.25, ease: "easeIn" as const },
-    },
+  const goBack = () => {
+    setStep((current) => Math.max(current - 1, 1));
+  };
+
+  const handleSubmit = async () => {
+    if (!stepValidity[3]) {
+      toast.error("Provjerite kvalitativne faktore prije generiranja analize.");
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadingProgress(8);
+    setResult(null);
+    setStep(4);
+
+    try {
+      const response = await fetch("/api/valuate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          industry: formData.industry,
+          revenue: Number(formData.revenue),
+          ebitda: Number(formData.ebitda),
+          sde: Number(formData.sde),
+          dependency: formData.dependency,
+          maturity: formData.maturity,
+        }),
+      });
+
+      const payload = (await response.json()) as
+        | ValuationResponse
+        | { error?: string };
+      const errorMessage = "error" in payload ? payload.error : undefined;
+
+      if (!response.ok || errorMessage) {
+        throw new Error(errorMessage || "Procjena nije uspjela.");
+      }
+
+      setLoadingProgress(100);
+      setResult(payload as ValuationResponse);
+      setStep(5);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Procjena nije uspjela. Pokušajte ponovno.",
+      );
+      setStep(3);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-inter relative z-20">
-      {/* Progress Header */}
-      {step < 4 && (
+    <div className="w-full max-w-3xl mx-auto relative z-20">
+      {step < 4 ? (
         <div className="mb-10 px-2 text-center">
-          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-4">
+          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-4">
             <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--df-gold))] to-trust shadow-[0_0_8px_rgba(212,175,55,0.3)]"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-df-trust-blue"
               initial={{ width: "33.33%" }}
               animate={{ width: `${(step / 3) * 100}%` }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
             />
           </div>
-          <div className="flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest gap-2">
+          <div className="flex items-center justify-center text-xs text-muted-foreground uppercase tracking-widest gap-2">
             <Lock className="size-3" />
-            Vaši podaci su 100% povjerljivi — Korak {step} od 3
+            Vaši podaci ostaju povjerljivi · korak {step} od 3
           </div>
         </div>
-      )}
+      ) : null}
 
-      <div className="w-full bg-card border border-white/10 shadow-none relative overflow-hidden rounded-none">
-        <div className="pt-10 px-8 sm:px-12 relative z-10 min-h-100 flex flex-col justify-center">
+      <div className="w-full bg-card border border-border rounded-none overflow-hidden">
+        <div className="pt-10 px-8 sm:px-12 relative z-10 min-h-[34rem] flex flex-col justify-center">
           <AnimatePresence mode="wait">
-            {/* STEP 1: INDUSTRY */}
-            {step === 1 && (
+            {step === 1 ? (
               <motion.div
-                key="step1"
+                key="valuate-step-1"
                 variants={stepVariants}
                 initial="hidden"
                 animate="visible"
@@ -144,51 +193,63 @@ export function ValuatorWizard() {
                 className="space-y-8 pb-10"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-heading font-extrabold text-navy dark:text-white tracking-tight">
+                  <h2 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
                     Koja je primarna djelatnost vaše tvrtke?
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Algoritam koristi specifične tržišne multiplikatore po
-                    sektorima.
+                  <p className="text-muted-foreground">
+                    Sektor određuje referentne multiplikatore i način na koji
+                    kupci gledaju na vrijednost poslovanja.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4" role="radiogroup" aria-label="Odaberite djelatnost">
-                  {INDUSTRIES.map((ind) => (
-                    <div
-                      key={ind.id}
+                <div
+                  className="grid grid-cols-2 md:grid-cols-3 gap-4"
+                  role="radiogroup"
+                  aria-label="Odaberite djelatnost"
+                >
+                  {INDUSTRIES.map((industry) => (
+                    <button
+                      key={industry.id}
+                      type="button"
                       role="radio"
-                      aria-checked={formData.industry === ind.id}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setFormData({ ...formData, industry: ind.id });
-                        }
-                      }}
+                      aria-checked={formData.industry === industry.id}
                       onClick={() =>
-                        setFormData({ ...formData, industry: ind.id })
+                        setFormData((current) => ({
+                          ...current,
+                          industry: industry.id,
+                        }))
                       }
-                      className={`cursor-pointer border p-5 rounded-none flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 ${formData.industry === ind.id ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.03]"}`}
+                      className={`cursor-pointer border p-5 rounded-none flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-1 ${
+                        formData.industry === industry.id
+                          ? "border-primary bg-primary/8 ring-1 ring-primary"
+                          : "border-border hover:border-primary/30 hover:bg-muted/30"
+                      }`}
                     >
-                      <ind.icon
-                        className={`size-8 ${formData.industry === ind.id ? "text-blue-400" : "text-slate-500"}`}
+                      <industry.icon
+                        className={`size-8 ${
+                          formData.industry === industry.id
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }`}
                       />
                       <span
-                        className={`text-sm font-bold font-sans tracking-wide uppercase ${formData.industry === ind.id ? "text-primary" : "text-muted-foreground"}`}
+                        className={`text-sm font-semibold tracking-wide ${
+                          formData.industry === industry.id
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
                       >
-                        {ind.label}
+                        {industry.label}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {/* STEP 2: FINANCIALS */}
-            {step === 2 && (
+            {step === 2 ? (
               <motion.div
-                key="step2"
+                key="valuate-step-2"
                 variants={stepVariants}
                 initial="hidden"
                 animate="visible"
@@ -196,95 +257,76 @@ export function ValuatorWizard() {
                 className="space-y-8 pb-10"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-heading font-extrabold text-navy dark:text-white tracking-tight">
+                  <h2 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
                     Financijski pokazatelji
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400">
+                  <p className="text-muted-foreground">
                     Unesite podatke za posljednjih 12 mjeseci poslovanja.
                   </p>
                 </div>
 
                 <div className="space-y-6 max-w-xl mx-auto">
-                  <div className="space-y-2 group">
-                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      Godišnji Prihodi
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">
-                        €
-                      </span>
-                      <Input
-                        type="number"
-                        value={formData.revenue === 0 ? "" : formData.revenue}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            revenue: Number(e.target.value),
-                          })
-                        }
-                        className="h-14 pl-10 text-lg bg-white/5 border border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground"
-                        placeholder="npr. 1000000"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="revenue">Godišnji prihodi (EUR)</Label>
+                    <Input
+                      id="revenue"
+                      type="number"
+                      value={formData.revenue}
+                      onChange={(event) =>
+                        setFormData((current) => ({
+                          ...current,
+                          revenue: event.target.value,
+                        }))
+                      }
+                      className="h-14 rounded-none"
+                      placeholder="1000000"
+                    />
                   </div>
 
-                  <div className="space-y-2 group">
-                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center justify-between">
-                      EBITDA (Operativna Dobit)
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">
-                        €
-                      </span>
-                      <Input
-                        type="number"
-                        value={formData.ebitda === 0 ? "" : formData.ebitda}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            ebitda: Number(e.target.value),
-                          })
-                        }
-                        className="h-14 pl-10 text-lg bg-white/5 border border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground"
-                        placeholder="npr. 250000"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ebitda">EBITDA (EUR)</Label>
+                    <Input
+                      id="ebitda"
+                      type="number"
+                      value={formData.ebitda}
+                      onChange={(event) =>
+                        setFormData((current) => ({
+                          ...current,
+                          ebitda: event.target.value,
+                        }))
+                      }
+                      className="h-14 rounded-none"
+                      placeholder="250000"
+                    />
                   </div>
 
-                  <div className="space-y-2 group">
-                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex flex-col">
-                      SDE{" "}
-                      <span className="text-[10px] font-normal text-slate-500 normal-case mt-0.5">
-                        Zarada vlasnika (Neto dobit + vaša plaća + vaši osobni
-                        troškovi unutar tvrtke)
-                      </span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">
-                        €
-                      </span>
-                      <Input
-                        type="number"
-                        value={formData.sde === 0 ? "" : formData.sde}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            sde: Number(e.target.value),
-                          })
-                        }
-                        className="h-14 pl-10 text-lg bg-white/5 border border-white/10 rounded-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans text-foreground"
-                        placeholder="npr. 300000"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sde">SDE (EUR)</Label>
+                    <Input
+                      id="sde"
+                      type="number"
+                      value={formData.sde}
+                      onChange={(event) =>
+                        setFormData((current) => ({
+                          ...current,
+                          sde: event.target.value,
+                        }))
+                      }
+                      className="h-14 rounded-none"
+                      placeholder="300000"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      SDE je korisna metrika za owner-operated biznise i daje
+                      dodatni raspon procjene uz EBITDA metodologiju.
+                    </p>
                   </div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {/* STEP 3: QUALITATIVE */}
-            {step === 3 && (
+            {step === 3 ? (
               <motion.div
-                key="step3"
+                key="valuate-step-3"
                 variants={stepVariants}
                 initial="hidden"
                 animate="visible"
@@ -292,256 +334,247 @@ export function ValuatorWizard() {
                 className="space-y-10 pb-10"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl font-heading font-extrabold text-navy dark:text-white tracking-tight">
+                  <h2 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
                     Kvalitativni faktori
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Ovi suptilni faktori značajno utječu na konačni prodajni
-                    multiplikator tvrtke.
+                  <p className="text-muted-foreground">
+                    Ovi faktori najviše utječu na spremnost tvrtke za prodajni
+                    proces i povjerenje investitora.
                   </p>
                 </div>
 
-                <div className="space-y-12 max-w-xl mx-auto pt-4">
-                  <div className="space-y-6 bg-white/[0.02] border border-white/10 p-6 rounded-none">
-                    <Label className="text-base font-bold text-slate-900 dark:text-white">
-                      Ovisnost poslovanja o vama (vlasniku)
-                    </Label>
+                <div className="space-y-10 max-w-xl mx-auto">
+                  <div className="space-y-6 bg-muted/20 border border-border p-6 rounded-none">
+                    <div>
+                      <Label className="text-base font-semibold text-foreground">
+                        Ovisnost poslovanja o vlasniku
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Može li tvrtka funkcionirati bez vašeg svakodnevnog
+                        operativnog angažmana?
+                      </p>
+                    </div>
                     <Slider
-                      defaultValue={[formData.dependency]}
+                      value={[formData.dependency]}
                       max={5}
                       min={1}
                       step={1}
-                      aria-label="Ovisnost o vlasniku"
-                      onValueChange={(val: number | readonly number[]) =>
-                        setFormData({
-                          ...formData,
-                          dependency: typeof val === "number" ? val : val[0],
-                        })
+                      onValueChange={(value) =>
+                        setFormData((current) => ({
+                          ...current,
+                          dependency: Array.isArray(value)
+                            ? (value[0] ?? 3)
+                            : value,
+                        }))
                       }
-                      className="py-2"
                     />
-                    <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
-                      <span
-                        className={
-                          formData.dependency === 1 ? "text-df-trust-blue" : ""
-                        }
-                      >
-                        1 - Nimalo
-                      </span>
-                      <span
-                        className={
-                          formData.dependency === 5 ? "text-amber-500" : ""
-                        }
-                      >
-                        5 - Potpuno
-                      </span>
+                    <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
+                      <span>1 · niska</span>
+                      <span>5 · potpuna</span>
                     </div>
-                    <p className="text-xs text-slate-500 italic">
-                      Posluje li tvrtka glatko mjesec dana dok ste vi na odmoru
-                      bez pristupa emailu?
-                    </p>
                   </div>
 
-                  <div className="space-y-6 bg-white/[0.02] border border-white/10 p-6 rounded-none">
-                    <Label className="text-base font-bold text-slate-900 dark:text-white">
-                      Uređenost i automatizacija procesa
-                    </Label>
+                  <div className="space-y-6 bg-muted/20 border border-border p-6 rounded-none">
+                    <div>
+                      <Label className="text-base font-semibold text-foreground">
+                        Digitalna zrelost i procesi
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Koliko su financije, operativa i izvještavanje
+                        standardizirani i dokumentirani?
+                      </p>
+                    </div>
                     <Slider
-                      defaultValue={[formData.maturity]}
+                      value={[formData.maturity]}
                       max={5}
                       min={1}
                       step={1}
-                      aria-label="Automatizacija procesa"
-                      onValueChange={(val: number | readonly number[]) =>
-                        setFormData({
-                          ...formData,
-                          maturity: typeof val === "number" ? val : val[0],
-                        })
+                      onValueChange={(value) =>
+                        setFormData((current) => ({
+                          ...current,
+                          maturity: Array.isArray(value)
+                            ? (value[0] ?? 3)
+                            : value,
+                        }))
                       }
-                      className="py-2"
                     />
-                    <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
-                      <span
-                        className={
-                          formData.maturity === 1 ? "text-red-500" : ""
-                        }
-                      >
-                        1 - Kaos
-                      </span>
-                      <span
-                        className={
-                          formData.maturity === 5 ? "text-green-500" : ""
-                        }
-                      >
-                        5 - Vrhunska
-                      </span>
+                    <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
+                      <span>1 · ručno</span>
+                      <span>5 · strukturirano</span>
                     </div>
-                    <p className="text-xs text-slate-500 italic">
-                      Imate li implementiran ERP, procedure za nove djelatnike i
-                      strukturirane financije?
-                    </p>
                   </div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {/* STEP 4: LOADING / GENERATING */}
-            {step === 4 && (
+            {step === 4 ? (
               <motion.div
-                key="step4"
+                key="valuate-step-4"
                 variants={stepVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
                 className="py-20 flex flex-col items-center justify-center text-center"
               >
-                <div className="relative size-32 mb-8">
-                  {/* Outer pulse */}
+                <div className="relative size-28 mb-8">
                   <motion.div
-                    animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeOut",
-                    }}
-                    className="absolute inset-0 rounded-full bg-df-trust-blue/20"
+                    animate={{ scale: [1, 1.35, 1.8], opacity: [0.35, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                    className="absolute inset-0 rounded-full bg-primary/20"
                   />
-                  {/* Inner spinning ring */}
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="absolute inset-0 rounded-full border-4 border-t-df-trust-blue border-r-df-trust-blue/30 border-b-df-trust-blue/10 border-l-transparent"
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border-4 border-t-primary border-r-df-trust-blue/40 border-b-df-trust-blue/10 border-l-transparent"
                   />
-                  {/* Center icon */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-[#0B1120] rounded-full z-10 m-2">
-                    <Sparkles className="size-8 text-gold animate-pulse" />
+                  <div className="absolute inset-0 m-2 rounded-full bg-background flex items-center justify-center">
+                    <Sparkles className="size-8 text-primary" />
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-heading font-extrabold text-navy dark:text-white mb-3">
-                  Sintetiziranje DealFlow Podataka
+                <h3 className="text-2xl font-heading font-semibold text-foreground mb-3">
+                  Generiramo inicijalnu procjenu
                 </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm">
-                  Naš AI model trenutno uspoređuje vaše pokazatelje s povijesnim
-                  M&A transakcijama u sektoru.
+                <p className="text-muted-foreground mb-8 max-w-sm">
+                  Uspoređujemo vaše pokazatelje s tipičnim tržišnim rasponima i
+                  procjenjujemo sell-readiness score.
                 </p>
 
-                <div className="w-64 h-2 bg-white/5 rounded-full overflow-hidden">
+                <div className="w-64 h-2 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-trust to-blue-400 rounded-full shadow-[0_0_8px_rgba(37,99,235,0.4)] transition-all duration-75"
+                    className="h-full bg-gradient-to-r from-primary to-df-trust-blue rounded-full transition-all duration-150"
                     style={{ width: `${loadingProgress}%` }}
                   />
                 </div>
-                <div className="mt-3 text-sm font-mono text-blue-400 font-bold">
+                <div className="mt-3 text-sm font-mono text-primary font-semibold">
                   {loadingProgress}%
                 </div>
               </motion.div>
-            )}
+            ) : null}
 
-            {/* STEP 5: RESULT */}
-            {step === 5 && result && (
+            {step === 5 && result ? (
               <motion.div
-                key="step5"
+                key="valuate-step-5"
                 variants={stepVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                aria-live="polite"
-                className="space-y-10 pb-6 w-full"
+                className="space-y-10 pb-6"
               >
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center p-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full mb-5">
+                  <div className="inline-flex items-center justify-center p-3 bg-emerald-500/10 text-emerald-600 rounded-full mb-5">
                     <CheckCircle2 className="size-8" />
                   </div>
-                  <h2 className="text-3xl font-heading font-extrabold text-navy dark:text-white tracking-tight">
-                    Vaša Inicijalna Procjena
+                  <h2 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
+                    Vaša inicijalna procjena
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400 mt-2">
-                    Ovo je algoritamski izračun baziran na unesenim podacima.
+                  <p className="text-muted-foreground mt-2">
+                    Ovo je prvi orijentacijski raspon temeljen na unesenim
+                    podacima i AI analizi spremnosti za prodajni proces.
                   </p>
                 </div>
 
-                <div className="bg-background border border-white/10 rounded-none p-8 text-center shadow-none relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-df-trust-blue to-transparent opacity-50" />
-
-                  <h3 className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">
-                    Procijenjena Tržišna Vrijednost
-                  </h3>
-
-                  <div className="text-5xl md:text-6xl font-extrabold text-foreground font-heading tracking-tighter mb-2 drop-shadow-sm">
-                    €{result.ranges.sde[0].toLocaleString("hr-HR")}{" "}
-                    <span className="text-3xl text-slate-400 mx-2 font-normal">
-                      do
-                    </span>{" "}
-                    €{result.ranges.ebitda[1].toLocaleString("hr-HR")}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="border border-border bg-muted/20 rounded-none p-6">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                      SDE raspon
+                    </p>
+                    <p className="text-xl font-heading text-foreground">
+                      {formatCurrency(result.ranges.sde[0])}
+                    </p>
+                    <p className="text-sm text-muted-foreground my-2">do</p>
+                    <p className="text-xl font-heading text-foreground">
+                      {formatCurrency(result.ranges.sde[1])}
+                    </p>
                   </div>
 
-                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-4">
-                    Generirano pomoću DealFlow AI
-                  </p>
+                  <div className="border border-border bg-muted/20 rounded-none p-6">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                      EBITDA raspon
+                    </p>
+                    <p className="text-xl font-heading text-foreground">
+                      {formatCurrency(result.ranges.ebitda[0])}
+                    </p>
+                    <p className="text-sm text-muted-foreground my-2">do</p>
+                    <p className="text-xl font-heading text-foreground">
+                      {formatCurrency(result.ranges.ebitda[1])}
+                    </p>
+                  </div>
+
+                  <div className="border border-border bg-primary/8 rounded-none p-6">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                      Sell-readiness
+                    </p>
+                    <p className="text-4xl font-heading text-primary">
+                      {result.sellReadinessScore}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      Rezultat spremnosti za strukturirani izlazak na tržište.
+                    </p>
+                  </div>
                 </div>
 
                 <div
-                  className="prose prose-invert max-w-none text-muted-foreground font-sans text-left prose-headings:font-heading prose-headings:text-foreground leading-relaxed p-6 bg-white/[0.02] rounded-none border border-white/10"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(result.html) }}
+                  className="prose max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-foreground leading-relaxed p-6 bg-muted/20 rounded-none border border-border"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(result.reportHtml),
+                  }}
                 />
 
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-6">
-                  <Link href="/dashboard/seller" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-foreground hover:bg-white/90 text-background font-heading font-bold rounded-none px-10 h-14 text-base transition-all hover:-translate-y-1 uppercase tracking-widest group">
-                      Započni Prodajni Proces
-                      <ArrowRight className="ml-2 size-5 group-hover:translate-x-1 transition-transform" />
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
+                  <Link href="/sell" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto rounded-none bg-df-trust-blue text-white hover:bg-df-trust-blue/90 h-14 px-10 uppercase tracking-[0.18em] text-xs">
+                      Pokreni prodajni proces
+                      <ArrowRight className="ml-2 size-5" />
                     </Button>
                   </Link>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setStep(1)}
-                      className="w-full sm:w-auto font-heading uppercase tracking-widest rounded-none px-6 h-14 text-muted-foreground hover:text-foreground"
-                    >
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                    className="w-full sm:w-auto rounded-none h-14 px-8"
+                  >
                     Ponovi izračun
                   </Button>
                 </div>
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
 
-        {/* Footer Navigation */}
-        {step < 4 && (
-          <div className="flex justify-between items-center p-6 sm:px-12 border-t border-white/[0.06] bg-white/[0.02] relative z-10">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                disabled={step === 1}
-                className={`font-heading uppercase tracking-widest font-bold rounded-none border border-white/10 bg-transparent hover:bg-white/5 text-foreground transition-colors h-12 px-6 ${step === 1 ? "invisible" : ""}`}
-              >
-              <ArrowLeft className="mr-2 size-4" /> Natrag
+        {step < 4 ? (
+          <div className="flex justify-between items-center p-6 sm:px-12 border-t border-border bg-muted/20">
+            <Button
+              variant="outline"
+              onClick={goBack}
+              disabled={step === 1}
+              className={`rounded-none h-12 px-6 ${
+                step === 1 ? "invisible" : ""
+              }`}
+            >
+              <ArrowLeft className="mr-2 size-4" />
+              Natrag
             </Button>
 
             {step < 3 ? (
-                <Button
-                  onClick={handleNext}
-                  disabled={step === 1 && !formData.industry}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-heading uppercase tracking-widest font-bold rounded-none transition-all h-12 px-8 group"
-                >
-                Sljedeće{" "}
-                <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
+              <Button
+                onClick={goNext}
+                className="rounded-none h-12 px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Sljedeće
+                <ArrowRight className="ml-2 size-4" />
               </Button>
             ) : (
-                <Button
-                  onClick={handleSubmit}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-heading uppercase tracking-widest font-bold rounded-none transition-all h-12 px-8 group"
-                >
-                Generiraj Analizu{" "}
-                <Sparkles className="ml-2 size-4 group-hover:scale-110 transition-transform" />
+              <Button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="rounded-none h-12 px-8 bg-df-trust-blue text-white hover:bg-df-trust-blue/90"
+              >
+                Generiraj analizu
+                <Sparkles className="ml-2 size-4" />
               </Button>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

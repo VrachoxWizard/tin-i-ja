@@ -1,22 +1,18 @@
-const rateMap = new Map<string, { count: number; resetAt: number }>();
+import { createHash } from "node:crypto";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * Simple in-memory rate limiter.
- * @param key - Unique identifier (e.g. IP address)
- * @param limit - Max requests allowed in the window
- * @param windowMs - Time window in milliseconds
- * @returns true if the request is allowed, false if rate-limited
- */
-export function rateLimit(
-  key: string,
-  limit: number = 5,
-  windowMs: number = 60_000
-): boolean {
+const fallbackRateMap = new Map<string, { count: number; resetAt: number }>();
+
+function hashKey(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function fallbackRateLimit(key: string, limit: number, windowMs: number) {
   const now = Date.now();
-  const entry = rateMap.get(key);
+  const entry = fallbackRateMap.get(key);
 
   if (!entry || now > entry.resetAt) {
-    rateMap.set(key, { count: 1, resetAt: now + windowMs });
+    fallbackRateMap.set(key, { count: 1, resetAt: now + windowMs });
     return true;
   }
 
@@ -24,18 +20,35 @@ export function rateLimit(
     return false;
   }
 
-  entry.count++;
+  entry.count += 1;
   return true;
 }
 
-// Periodic cleanup to prevent memory leaks (every 5 minutes)
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of rateMap) {
-      if (now > entry.resetAt) {
-        rateMap.delete(key);
-      }
+export async function enforceRateLimit(input: {
+  key: string;
+  route: string;
+  limit?: number;
+  windowMs?: number;
+}) {
+  const limit = input.limit ?? 5;
+  const windowMs = input.windowMs ?? 60_000;
+  const keyHash = hashKey(input.key);
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("check_rate_limit", {
+      p_key_hash: keyHash,
+      p_limit: limit,
+      p_route: input.route,
+      p_window_seconds: Math.ceil(windowMs / 1000),
+    });
+
+    if (!error && typeof data === "boolean") {
+      return data;
     }
-  }, 5 * 60_000);
+  } catch {
+    // Fall back in environments where the DB function has not been applied yet.
+  }
+
+  return fallbackRateLimit(`${input.route}:${keyHash}`, limit, windowMs);
 }
