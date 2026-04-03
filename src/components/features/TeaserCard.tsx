@@ -66,7 +66,7 @@ export function TeaserCard({
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="h-full"
     >
-      <GlowCard className="flex flex-col h-full border border-border bg-card/90 shadow-sm hover:shadow-xl transition-all duration-300 rounded-none overflow-hidden group">
+      <GlowCard className="flex flex-col h-full border border-border/40 bg-card/95 shadow-glass hover:shadow-glow-gold hover:border-primary/50 transition-all duration-500 rounded-none overflow-hidden group">
 
         {/* ── Premium accent bar — gold gradient ───────────────────── */}
         <div className="h-[3px] w-full bg-linear-to-r from-df-trust-blue/60 via-[#D4AF37] to-df-trust-blue/60 group-hover:opacity-100 opacity-80 transition-opacity duration-300" />
@@ -169,7 +169,7 @@ export function TeaserCard({
           {/* Primary — request NDA access (gold-accented) */}
           <Link href={`/listings/${publicCode}`} className="flex-1">
             <Button
-              className="w-full h-11 rounded-none bg-df-trust-blue text-white hover:bg-df-trust-blue/90 shadow-[0_0_16px_rgba(21,101,192,0.2)] hover:shadow-[0_0_24px_rgba(21,101,192,0.35)] transition-shadow font-medium"
+              className="w-full h-11 rounded-none bg-df-trust-blue text-white hover:bg-df-trust-blue/90 shadow-[0_0_16px_rgba(21,101,192,0.2)] hover:shadow-[0_0_32px_rgba(21,101,192,0.5)] transition-all duration-300 font-bold tracking-wide"
             >
               <Lock className="w-4 h-4 mr-2 shrink-0" />
               NDA pristup

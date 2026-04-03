@@ -62,9 +62,8 @@ function PasswordStrength({ password }: { password: string }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-              i < strength ? colors[strength] : "bg-muted"
-            }`}
+            className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < strength ? colors[strength] : "bg-muted"
+              }`}
           />
         ))}
       </div>
@@ -178,8 +177,9 @@ function RegisterForm() {
             id="password"
             name="password"
             type="password"
+            placeholder="min. 8 znakova, broj i poseban znak"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="h-12 rounded-xl bg-muted/50 border-border/60 px-4 text-base placeholder:text-muted-foreground/60 focus-visible:bg-background transition-colors"

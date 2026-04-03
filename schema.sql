@@ -103,9 +103,10 @@ create table public.rate_limits (
 );
 
 create index listings_owner_id_idx on public.listings (owner_id);
-create index listings_status_idx on public.listings (status);
-create index ndas_buyer_id_status_idx on public.ndas (buyer_id, status);
-create index ndas_listing_id_status_idx on public.ndas (listing_id, status);
+-- Replaced full index with partial because 'status' is low cardinality
+create index idx_listings_status_active on public.listings (status) where status = 'active';
+create index idx_ndas_buyer_signed on public.ndas (buyer_id) where status = 'signed';
+create index idx_ndas_listing_signed on public.ndas (listing_id) where status = 'signed';
 create index deal_room_files_listing_id_idx on public.deal_room_files (listing_id);
 create index matches_buyer_profile_id_idx on public.matches (buyer_profile_id);
 

@@ -13,6 +13,8 @@ import { BUYER_TYPES } from "@/lib/contracts";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validation";
 
+const uuidSchema = z.string().uuid("Neispravan ID.");
+
 const sellerListingSchema = z.object({
   company_name: z.string().min(2).max(120),
   industry: z.string().min(2).max(120),
@@ -225,6 +227,8 @@ export async function saveSellerListingAction(
 }
 
 export async function publishListingAction(listingId: string): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(listingId).success) return { error: "Neispravan ID oglasa." };
+
   const { supabase, user, profile } = await requireUser();
   const roleError = getRoleError(profile?.role, ["seller", "admin"]);
 
@@ -330,6 +334,8 @@ export async function saveBuyerProfileAction(
 }
 
 export async function requestNdaAction(listingId: string): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(listingId).success) return { error: "Neispravan ID oglasa." };
+
   const { supabase, user } = await requireUser();
 
   const ndaAllowed = await enforceRateLimit({
@@ -380,6 +386,7 @@ export async function reviewNdaAction(
   ndaId: string,
   decision: "approve" | "reject",
 ): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(ndaId).success) return { error: "Neispravan NDA ID." };
   const parsedDecision = decisionSchema.safeParse(decision);
 
   if (!parsedDecision.success) {
@@ -447,6 +454,8 @@ export async function uploadDealRoomFileAction(
   listingId: string,
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(listingId).success) return { error: "Neispravan ID oglasa." };
+
   const { supabase, user, profile } = await requireUser();
   const roleError = getRoleError(profile?.role, ["seller", "admin"]);
 
@@ -516,6 +525,8 @@ export async function uploadDealRoomFileAction(
 export async function archiveListingAction(
   listingId: string,
 ): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(listingId).success) return { error: "Neispravan ID oglasa." };
+
   const { supabase, user, profile } = await requireUser();
   const roleError = getRoleError(profile?.role, ["seller", "admin"]);
 

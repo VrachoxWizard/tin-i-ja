@@ -100,15 +100,21 @@ export function Header() {
 
   useEffect(() => {
     const supabase = createClient();
+
+    function getRoleCookie(): string | undefined {
+      const match = document.cookie.match(/(?:^|;\s*)df-role=([^;]*)/);
+      return match?.[1] || undefined;
+    }
+
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (authUser) {
-        setUser({ id: authUser.id, role: authUser.user_metadata?.role });
+        setUser({ id: authUser.id, role: getRoleCookie() || authUser.user_metadata?.role });
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, role: session.user.user_metadata?.role });
+        setUser({ id: session.user.id, role: getRoleCookie() || session.user.user_metadata?.role });
       } else {
         setUser(null);
       }
@@ -131,7 +137,7 @@ export function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 border-b ${isScrolled
+        className={`fixed top-0 w-full z-40 transition-all duration-500 border-b ${isScrolled
           ? "border-primary/20 bg-card-elevated/40 backdrop-blur-xl shadow-glass-elevated"
           : "border-transparent bg-transparent"
           }`}
@@ -143,7 +149,7 @@ export function Header() {
             <div>
               <p className="font-heading text-lg text-foreground tracking-tight group-hover:text-primary transition-colors">DealFlow</p>
               <p className="text-[0.65rem] uppercase tracking-[0.25em] text-muted-foreground">
-                Premium M&amp;A
+                {'Premium M&A'}
               </p>
             </div>
           </Link>
@@ -167,12 +173,12 @@ export function Header() {
             {user ? (
               <>
                 <Link href={dashboardPath}>
-                  <Button variant="outline" className="rounded-none border-primary/40 bg-card-elevated/40 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.05)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:border-primary/60 transition-all text-xs tracking-widest uppercase">
+                  <Button variant="outline" className="h-10 px-6 rounded-none border-primary/40 bg-card-elevated/40 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.05)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:border-primary/60 transition-all text-sm tracking-widest uppercase font-semibold">
                     Trezor
                   </Button>
                 </Link>
                 <form action={logout}>
-                  <Button type="submit" variant="ghost" className="rounded-none text-muted-foreground text-xs tracking-widest uppercase hover:text-foreground">
+                  <Button type="submit" variant="ghost" className="h-10 px-4 rounded-none text-muted-foreground text-sm tracking-widest uppercase hover:text-foreground hover:bg-card-elevated transition-colors">
                     <LogOut className="w-3.5 h-3.5 mr-2" />
                     Odjava
                   </Button>
@@ -181,10 +187,10 @@ export function Header() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" className="rounded-none text-xs tracking-widest uppercase hover:text-foreground">Prijava</Button>
+                  <Button variant="ghost" className="h-10 px-5 rounded-none text-sm font-semibold tracking-widest uppercase hover:text-foreground">Prijava</Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="rounded-none border border-primary/50 btn-shimmer bg-card-elevated/80 backdrop-blur-md hover:bg-primary/20 text-foreground text-xs uppercase tracking-[0.18em] shadow-glow-gold transition-all duration-500">
+                  <Button className="h-10 px-6 rounded-none border border-primary/50 btn-shimmer bg-card-elevated/80 backdrop-blur-md hover:bg-primary/20 text-foreground text-sm font-semibold uppercase tracking-[0.18em] shadow-glow-gold transition-all duration-500">
                     Započni
                   </Button>
                 </Link>
@@ -197,6 +203,8 @@ export function Header() {
             className="lg:hidden relative w-12 h-12 flex items-center justify-center text-foreground border border-primary/30 bg-card-elevated/80 backdrop-blur-xl z-[60] shadow-glow-gold"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label={mobileMenuOpen ? "Zatvori navigaciju" : "Otvori navigaciju"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav"
           >
             <AnimatePresence mode="wait" initial={false}>
               {mobileMenuOpen ? (
@@ -222,6 +230,8 @@ export function Header() {
               initial="hidden"
               animate="visible"
               exit="exit"
+              role="navigation"
+              aria-label="Mobilna navigacija"
               className="lg:hidden fixed inset-0 z-50 bg-[#02050A] flex flex-col justify-center overflow-hidden"
             >
               {/* Massive background ambient element */}

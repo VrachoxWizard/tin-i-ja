@@ -21,6 +21,11 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 12;
 
+/** Escape SQL LIKE/ILIKE wildcard characters to prevent injection. */
+function escapeIlike(str: string): string {
+  return str.replace(/[%_\\]/g, '\\$&');
+}
+
 export default async function ListingsPage({
   searchParams,
 }: {
@@ -62,8 +67,9 @@ export default async function ListingsPage({
 
   // Keyword search — matches against industry OR region OR blind teaser
   if (q) {
+    const safeQ = escapeIlike(q);
     query = query.or(
-      `industry_nkd.ilike.%${q}%,region.ilike.%${q}%,blind_teaser.ilike.%${q}%`,
+      `industry_nkd.ilike.%${safeQ}%,region.ilike.%${safeQ}%,blind_teaser.ilike.%${safeQ}%`,
     );
   }
 

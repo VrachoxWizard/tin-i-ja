@@ -6,10 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
-import { ScrollToTop } from "@/components/ui/ScrollToTop";
-import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { Preloader } from "@/components/ui/Preloader";
-import { SuppressWarnings } from "@/components/ui/SuppressWarnings";
 import { validateEnv } from "@/lib/env";
 
 if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) {
@@ -75,19 +72,16 @@ export default function RootLayout({
   return (
     <html
       lang="hr"
-      className={`${inter.variable} ${dmSans.variable} h-full antialiased dark`}
+      className={`dark ${inter.variable} ${dmSans.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SuppressWarnings />
         <NoiseOverlay />
-        <ScrollToTop />
-        <SmoothScroll>
-          <Preloader>
-            {children}
-          </Preloader>
-        </SmoothScroll>
+        <Preloader>
+          {children}
+        </Preloader>
         <Toaster
-          theme="system"
+          theme="dark"
           position="top-right"
           toastOptions={{
             style: {
@@ -99,6 +93,38 @@ export default function RootLayout({
         />
         <Analytics />
         <SpeedInsights />
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "DealFlow",
+              url: siteUrl,
+              logo: `${siteUrl}/og-image.png`,
+              description: "Diskretna hrvatska M&A platforma za prodavatelje i investitore.",
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Zagreb",
+                addressCountry: "HR",
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "DealFlow",
+              url: siteUrl,
+              description: "AI procjena, anonimni teaseri, kvalificirana uparivanja i sigurni deal room za hrvatsko tržište.",
+            }),
+          }}
+        />
       </body>
     </html>
   );

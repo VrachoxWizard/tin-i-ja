@@ -55,11 +55,23 @@ export async function generateMetadata({
   const title = `${listing.industry_nkd} · ${listing.region}`;
   const description = `Anonimna M&A prilika u sektoru ${listing.industry_nkd} za regiju ${listing.region}. Prihod ${formatCurrency(listing.revenue_eur)} i EBITDA ${formatCurrency(listing.ebitda_eur)}.`;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dealflow.hr";
   return {
     title,
     description,
     alternates: { canonical: `/listings/${publicCode}` },
-    openGraph: { title, description },
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: `${siteUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ]
+    },
   };
 }
 

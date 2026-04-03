@@ -9,6 +9,7 @@ import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validatio
 import type { ActionResult } from "@/app/actions/dealflow";
 
 const decisionSchema = z.enum(["approve", "reject"]);
+const uuidSchema = z.string().uuid("Neispravan ID.");
 
 async function requireBroker() {
   const supabase = await createClient();
@@ -56,6 +57,9 @@ export async function brokerReviewNdaAction(
   const parsedDecision = decisionSchema.safeParse(decision);
   if (!parsedDecision.success) {
     return { error: "Nepoznata NDA odluka." };
+  }
+  if (!uuidSchema.safeParse(ndaId).success) {
+    return { error: "Neispravan NDA ID." };
   }
 
   const { supabase, user } = await requireBroker();
@@ -115,6 +119,10 @@ export async function brokerUploadDealRoomFileAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const { supabase, user } = await requireBroker();
+
+  if (!uuidSchema.safeParse(listingId).success) {
+    return { error: "Neispravan ID oglasa." };
+  }
 
   const isAssigned = await verifyBrokerAssignment(supabase, user.id, listingId);
   if (!isAssigned) {

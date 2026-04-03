@@ -7,10 +7,11 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const mql = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
   }, []);
 
   if (isMobile) return <>{children}</>;
@@ -25,8 +26,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
         wheelMultiplier: 0.8,
       }}
     >
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {children as any}
+      {children}
     </ReactLenis>
   );
 }

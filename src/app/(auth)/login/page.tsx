@@ -87,65 +87,67 @@ function LoginForm() {
 
       {/* Form */}
       <form action={login} className="space-y-5">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="space-y-2"
-        >
-          <Label
-            htmlFor="email"
-            className="text-foreground text-sm font-medium"
+        <fieldset disabled={false} className="space-y-5 [&:disabled]:opacity-60 [&:disabled]:pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="space-y-2"
           >
-            Email adresa
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="ime@tvrtka.hr"
-            required
-            className="h-12 rounded-xl bg-muted/50 border-border/60 px-4 text-base placeholder:text-muted-foreground/60 focus-visible:bg-background transition-colors"
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="space-y-2"
-        >
-          <div className="flex items-center justify-between">
             <Label
-              htmlFor="password"
+              htmlFor="email"
               className="text-foreground text-sm font-medium"
             >
-              Lozinka
+              Email adresa
             </Label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-gold transition-colors"
-            >
-              Zaboravljena lozinka?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="h-12 rounded-xl bg-muted/50 border-border/60 px-4 text-base placeholder:text-muted-foreground/60 focus-visible:bg-background transition-colors"
-          />
-        </motion.div>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="ime@tvrtka.hr"
+              required
+              className="h-12 rounded-xl bg-muted/50 border-border/60 px-4 text-base placeholder:text-muted-foreground/60 focus-visible:bg-background transition-colors"
+            />
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="pt-2"
-        >
-          <SubmitButton />
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <Label
+                htmlFor="password"
+                className="text-foreground text-sm font-medium"
+              >
+                Lozinka
+              </Label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-gold transition-colors"
+              >
+                Zaboravljena lozinka?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="h-12 rounded-xl bg-muted/50 border-border/60 px-4 text-base placeholder:text-muted-foreground/60 focus-visible:bg-background transition-colors"
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="pt-2"
+          >
+            <SubmitButton />
+          </motion.div>
+        </fieldset>
       </form>
 
       {/* Footer link */}

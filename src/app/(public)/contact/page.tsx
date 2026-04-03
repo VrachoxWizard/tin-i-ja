@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
+import { Mail, MapPin, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Kontakt | DealFlow",
@@ -26,19 +26,13 @@ export default function ContactPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
             {[
               {
                 icon: Mail,
                 label: "Email",
                 value: "info@dealflow.hr",
                 href: "mailto:info@dealflow.hr",
-              },
-              {
-                icon: Phone,
-                label: "Telefon",
-                value: "+385 1 234 5678",
-                href: "tel:+38512345678",
               },
               {
                 icon: MapPin,

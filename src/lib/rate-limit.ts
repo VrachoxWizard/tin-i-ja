@@ -46,8 +46,17 @@ export async function enforceRateLimit(input: {
     if (!error && typeof data === "boolean") {
       return data;
     }
-  } catch {
+
+    console.warn(
+      `[rate-limit] DB RPC failed for route="${input.route}", falling back to in-memory (unreliable in serverless):`,
+      error?.message ?? "unexpected response",
+    );
+  } catch (e) {
     // Fall back in environments where the DB function has not been applied yet.
+    console.warn(
+      `[rate-limit] DB RPC threw for route="${input.route}", falling back to in-memory:`,
+      e instanceof Error ? e.message : e,
+    );
   }
 
   return fallbackRateLimit(`${input.route}:${keyHash}`, limit, windowMs);
