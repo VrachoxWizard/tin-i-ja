@@ -63,24 +63,40 @@ export default function AuthLayout({
             kvalificirane investitore na hrvatskom tržištu.
           </p>
 
-          {/* Social proof stats */}
-          <div className="flex gap-8">
+          {/* Trust principles — 3 credible statements instead of fake stats */}
+          <div className="flex flex-col gap-4">
             {[
-              { value: "250+", label: "Procijenjenih tvrtki" },
-              { value: "98%", label: "Diskrecija" },
-              { value: "45+", label: "Aktivnih investitora" },
-            ].map((stat, i) => (
+              {
+                icon: "🔒",
+                title: "Potpuna diskrecija",
+                body: "Identitet vaše tvrtke ostaje skriven sve do NDA odobrenja.",
+              },
+              {
+                icon: "🤝",
+                title: "Verificirani sudionici",
+                body: "Svaki kupac prolazi provjeru profila prije pristupa deal roomu.",
+              },
+              {
+                icon: "⚖️",
+                title: "Strukturiran proces",
+                body: "AI procjena, blind teaser, NDA workflow i siguran deal room.",
+              },
+            ].map((item, i) => (
               <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                key={item.title}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+                className="flex items-start gap-3"
               >
-                <div className="text-2xl font-heading font-bold text-white">
-                  {stat.value}
-                </div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">
-                  {stat.label}
+                <span className="text-lg leading-none mt-0.5">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-semibold text-white/90 leading-snug">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-slate-400 leading-relaxed mt-0.5">
+                    {item.body}
+                  </p>
                 </div>
               </motion.div>
             ))}

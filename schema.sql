@@ -180,38 +180,52 @@ create policy "Users can read own data" on public.users
 create policy "Users can update own data" on public.users
   for update using ((select auth.uid()) = id);
 
-create policy "Sellers can manage own listings" on public.listings
-  for all using ((select auth.uid()) = owner_id)
-  with check ((select auth.uid()) = owner_id);
-
-create policy "Signed NDA buyers can read listings" on public.listings
+-- ─── listings ─────────────────────────────────────────────────────────────────
+-- Single SELECT policy covering all access patterns (optimized: no per-row auth.uid() re-eval)
+create policy "listings_select_policy" on public.listings
   for select using (
-    exists (
-      select 1
-      from public.ndas
+    status in ('active', 'under_nda')
+    or owner_id = (select auth.uid())
+    or broker_id = (select auth.uid())
+    or exists (
+      select 1 from public.ndas
       where ndas.listing_id = listings.id
         and ndas.buyer_id = (select auth.uid())
         and ndas.status = 'signed'
     )
+    or exists (
+      select 1 from public.users
+      where id = (select auth.uid()) and role = 'admin'
+    )
   );
 
-create policy "Public can view active listings (limited columns)" on public.listings
-  for select
-  to anon, authenticated
-  using (status in ('active', 'under_nda'));
+create policy "Sellers can insert own listings" on public.listings
+  for insert with check (owner_id = (select auth.uid()));
 
+create policy "Sellers can update own listings" on public.listings
+  for update using (owner_id = (select auth.uid()));
+
+create policy "Sellers can delete own listings" on public.listings
+  for delete using (owner_id = (select auth.uid()));
+
+-- ─── buyer_profiles ────────────────────────────────────────────────────────────
 create policy "Buyers can manage own profile" on public.buyer_profiles
   for all using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
-create policy "Users can see related ndas" on public.ndas
+-- ─── ndas ──────────────────────────────────────────────────────────────────────
+-- Single SELECT policy covering buyer, seller, broker, and admin access
+create policy "ndas_select_policy" on public.ndas
   for select using (
     buyer_id = (select auth.uid())
+    or listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
+    )
+    or listing_id in (
+      select id from public.listings where broker_id = (select auth.uid())
+    )
     or exists (
-      select 1
-      from public.listings
-      where listings.id = ndas.listing_id
-        and listings.owner_id = (select auth.uid())
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
     )
   );
 
@@ -228,54 +242,64 @@ create policy "Sellers can update ndas for own listings" on public.ndas
     )
   );
 
-create policy "Sellers can manage own deal room files" on public.deal_room_files
-  for all using (
-    exists (
-      select 1
-      from public.listings
-      where listings.id = deal_room_files.listing_id
-        and listings.owner_id = (select auth.uid())
+-- ─── deal_room_files ───────────────────────────────────────────────────────────
+-- Single SELECT policy covering seller, signed-NDA buyer, broker, and admin
+create policy "deal_room_files_select_policy" on public.deal_room_files
+  for select using (
+    listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
     )
-  )
-  with check (
-    exists (
-      select 1
-      from public.listings
-      where listings.id = deal_room_files.listing_id
-        and listings.owner_id = (select auth.uid())
+    or listing_id in (
+      select ndas.listing_id from public.ndas
+      where ndas.buyer_id = (select auth.uid()) and ndas.status = 'signed'
+    )
+    or listing_id in (
+      select id from public.listings where broker_id = (select auth.uid())
+    )
+    or exists (
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
     )
   );
 
-create policy "Signed NDA buyers can view files" on public.deal_room_files
-  for select using (
-    exists (
-      select 1
-      from public.ndas
-      where ndas.listing_id = deal_room_files.listing_id
-        and ndas.buyer_id = (select auth.uid())
-        and ndas.status = 'signed'
+create policy "Sellers can insert own deal room files" on public.deal_room_files
+  for insert with check (
+    listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
     )
   );
 
-create policy "Buyers can see own matches" on public.matches
-  for select using (
-    exists (
-      select 1
-      from public.buyer_profiles
-      where buyer_profiles.id = matches.buyer_profile_id
-        and buyer_profiles.user_id = (select auth.uid())
+create policy "Sellers can delete own deal room files" on public.deal_room_files
+  for delete using (
+    listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
     )
   );
 
-create policy "Sellers can see listing matches" on public.matches
+-- ─── matches ───────────────────────────────────────────────────────────────────
+-- Single SELECT policy covering buyer profile owner, listing seller, and admin
+create policy "matches_select_policy" on public.matches
   for select using (
-    exists (
-      select 1
-      from public.listings
-      where listings.id = matches.listing_id
-        and listings.owner_id = (select auth.uid())
+    buyer_profile_id in (
+      select id from public.buyer_profiles where user_id = (select auth.uid())
+    )
+    or listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
+    )
+    or exists (
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
     )
   );
+
+-- ─── audit_logs ────────────────────────────────────────────────────────────────
+alter table public.audit_logs enable row level security;
+create policy "Admins can view audit logs" on public.audit_logs
+  for select using (
+    exists (
+      select 1 from public.users
+      where id = (select auth.uid()) and role = 'admin'
+    )
+  );
+
 
 create policy "No direct access to rate limits" on public.rate_limits
   for all using (false)

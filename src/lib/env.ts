@@ -6,11 +6,11 @@ export function validateEnv() {
   const required = [
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "GOOGLE_GENERATIVE_AI_API_KEY",
   ];
 
   const recommended = [
     "NEXT_PUBLIC_SITE_URL",
+    "GOOGLE_GENERATIVE_AI_API_KEY", // only needed for /api/valuate
   ];
 
   const missingRecommended = recommended.filter((key) => !process.env[key]);

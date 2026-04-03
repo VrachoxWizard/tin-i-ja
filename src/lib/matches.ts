@@ -151,7 +151,7 @@ export async function syncMatchesForBuyerProfile(
 
   const { data: listings } = await supabase
     .from("listings")
-    .select("*")
+    .select("id, public_code, industry_nkd, region, revenue_eur, ebitda_eur, sde_eur, asking_price_eur, status, owner_id, company_name, employees, year_founded, reason_for_sale, transition_support, owner_dependency_score, digital_maturity, is_exclusive, blind_teaser, broker_id, created_at, updated_at")
     .eq("status", "active");
 
   await batchSync(listings ?? [], (listing) =>
@@ -175,7 +175,7 @@ export async function syncMatchesForListing(
 
   const { data: buyerProfiles } = await supabase
     .from("buyer_profiles")
-    .select("*");
+    .select("id, user_id, target_industries, target_regions, target_ev_min, target_ev_max, target_revenue_min, target_revenue_max, transaction_type, investment_thesis, created_at, updated_at");
 
   await batchSync(buyerProfiles ?? [], (bp) =>
     syncPair(supabase, bp, listing),

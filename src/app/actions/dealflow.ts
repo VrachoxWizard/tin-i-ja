@@ -11,6 +11,7 @@ import { syncMatchesForBuyerProfile, syncMatchesForListing } from "@/lib/matches
 import { DEAL_ROOM_BUCKET } from "@/lib/deal-room";
 import { BUYER_TYPES } from "@/lib/contracts";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validation";
 
 const sellerListingSchema = z.object({
   company_name: z.string().min(2).max(120),
@@ -400,10 +401,10 @@ export async function reviewNdaAction(
 
   const { data: listing } = nda
     ? await supabase
-        .from("listings")
-        .select("owner_id")
-        .eq("id", nda.listing_id)
-        .single()
+      .from("listings")
+      .select("owner_id")
+      .eq("id", nda.listing_id)
+      .single()
     : { data: null };
 
   if (!nda || listing?.owner_id !== user.id) {
@@ -473,44 +474,13 @@ export async function uploadDealRoomFileAction(
     return { error: "Oglas nije pronađen." };
   }
 
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-  const ALLOWED_MIME_PREFIXES = [
-    "application/pdf",
-    "image/",
-    "application/vnd.openxmlformats-officedocument.",
-    "application/vnd.ms-excel",
-    "application/vnd.ms-word",
-    "text/csv",
-  ];
-
-  const docType = formData.get("doc_type");
-  const file = formData.get("file");
-
-  if (
-    typeof docType !== "string" ||
-    !["financial", "legal", "asset"].includes(docType) ||
-    !(file instanceof File) ||
-    file.size === 0
-  ) {
-    return { error: "Odaberite valjanu vrstu dokumenta i datoteku." };
+  const uploadResult = validateDealRoomUpload(formData);
+  if (!uploadResult.ok) {
+    return { error: uploadResult.error };
   }
+  const { file, docType } = uploadResult;
 
-  if (file.size > MAX_FILE_SIZE) {
-    return { error: "Datoteka ne smije biti veća od 10 MB." };
-  }
-
-  const mimeOk = ALLOWED_MIME_PREFIXES.some((prefix) =>
-    file.type.startsWith(prefix),
-  );
-  if (!mimeOk) {
-    return {
-      error:
-        "Dozvoljeni formati: PDF, slike, Excel, Word i CSV datoteke.",
-    };
-  }
-
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const filePath = `${listingId}/${Date.now()}-${safeName}`;
+  const filePath = `${listingId}/${Date.now()}-${sanitizeFileName(file.name)}`;
 
   const { error: uploadError } = await supabase.storage
     .from(DEAL_ROOM_BUCKET)

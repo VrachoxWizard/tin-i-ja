@@ -10,6 +10,9 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log for server-side debugging; never render internal messages to the user.
+  console.error('[GlobalError]', error.digest ?? error.message);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center max-w-md">
@@ -20,7 +23,10 @@ export default function GlobalError({
           Nešto je pošlo po krivu
         </h2>
         <p className="text-muted-foreground mb-8 leading-relaxed">
-          {error.message || "Došlo je do neočekivane pogreške. Pokušajte ponovo."}
+          Došlo je do neočekivane pogreške. Pokušajte ponovo.
+          {error.digest && (
+            <span className="block mt-2 text-xs text-muted-foreground/60">Referentni kod: {error.digest}</span>
+          )}
         </p>
         <Button
           onClick={reset}

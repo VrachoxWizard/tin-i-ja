@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { DEAL_ROOM_BUCKET } from "@/lib/deal-room";
+import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validation";
 import type { ActionResult } from "@/app/actions/dealflow";
 
 const decisionSchema = z.enum(["approve", "reject"]);
@@ -130,41 +131,13 @@ export async function brokerUploadDealRoomFileAction(
     return { error: "Previše uploada. Pokušajte ponovno za minutu." };
   }
 
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
-  const ALLOWED_MIME_PREFIXES = [
-    "application/pdf",
-    "image/",
-    "application/vnd.openxmlformats-officedocument.",
-    "application/vnd.ms-excel",
-    "application/vnd.ms-word",
-    "text/csv",
-  ];
-
-  const docType = formData.get("doc_type");
-  const file = formData.get("file");
-
-  if (
-    typeof docType !== "string" ||
-    !["financial", "legal", "asset"].includes(docType) ||
-    !(file instanceof File) ||
-    file.size === 0
-  ) {
-    return { error: "Odaberite valjanu vrstu dokumenta i datoteku." };
+  const uploadResult = validateDealRoomUpload(formData);
+  if (!uploadResult.ok) {
+    return { error: uploadResult.error };
   }
+  const { file, docType } = uploadResult;
 
-  if (file.size > MAX_FILE_SIZE) {
-    return { error: "Datoteka ne smije biti veća od 10 MB." };
-  }
-
-  const mimeOk = ALLOWED_MIME_PREFIXES.some((prefix) =>
-    file.type.startsWith(prefix),
-  );
-  if (!mimeOk) {
-    return { error: "Dozvoljeni formati: PDF, slike, Excel, Word i CSV datoteke." };
-  }
-
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const filePath = `${listingId}/${Date.now()}-${safeName}`;
+  const filePath = `${listingId}/${Date.now()}-${sanitizeFileName(file.name)}`;
 
   const { error: uploadError } = await supabase.storage
     .from(DEAL_ROOM_BUCKET)
