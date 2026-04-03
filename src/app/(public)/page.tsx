@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Building2,
   Lock,
-  Search,
   ShieldCheck,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { TeaserCard } from "@/components/features/TeaserCard";
@@ -105,11 +104,12 @@ export default async function HomePage() {
               <div className="relative group">
                 <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 <div className="relative z-10 aspect-[3/4] max-h-[70vh] border border-primary/20 bg-card-elevated/40 backdrop-blur-sm p-4 shadow-glass-elevated transition-transform duration-700 group-hover:scale-[1.02]">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
                     alt="Corporate Architecture"
-                    className="w-full h-full object-cover filter contrast-125 saturate-50 mix-blend-luminosity opacity-80"
-                    loading="lazy"
+                    fill
+                    className="object-cover filter contrast-125 saturate-50 mix-blend-luminosity opacity-80"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                   <Magnetic strength={15}>
                     <div className="absolute bottom-10 -left-10 bg-card-elevated/90 backdrop-blur-xl border border-primary/40 shadow-glow-gold p-6 max-w-[240px]">
@@ -128,11 +128,12 @@ export default async function HomePage() {
       {/* ── METRICS PARALLAX BREAK ───────────────────────────────────────────── */}
       <section className="relative py-32 border-b border-border/20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1541888081622-446a81bb1a7e?q=80&w=2000"
             alt="Glass skyscraper abstract"
-            className="w-full h-full object-cover object-center fixed opacity-10"
-            loading="lazy"
+            fill
+            className="object-cover object-center opacity-10"
+            sizes="100vw"
           />
         </div>
 
@@ -164,22 +165,24 @@ export default async function HomePage() {
               <FadeInView delay={0.1}>
                 <div className="absolute top-0 right-0 w-[80%] h-[75%] border border-border/20 shadow-glass-elevated overflow-hidden group">
                   <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10 opacity-30 group-hover:opacity-0 transition-opacity" />
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000"
                     alt="Luxury office"
-                    className="w-full h-full object-cover filter grayscale contrast-125 transition-transform duration-1000 group-hover:scale-105"
-                    loading="lazy"
+                    fill
+                    className="object-cover filter grayscale contrast-125 transition-transform duration-1000 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>
               </FadeInView>
               <FadeInView delay={0.3} yOffset={-30}>
                 <div className="absolute bottom-0 left-0 w-[55%] h-[50%] border border-primary/30 p-2 bg-card-elevated/40 backdrop-blur-md shadow-glow-gold z-20">
                   <div className="w-full h-full border border-border/20 overflow-hidden">
-                    <img
+                    <Image
                       src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1632"
                       alt="Business meeting"
-                      className="w-full h-full object-cover filter grayscale contrast-125"
-                      loading="lazy"
+                      fill
+                      className="object-cover filter grayscale contrast-125"
+                      sizes="(max-width: 1024px) 55vw, 25vw"
                     />
                   </div>
                 </div>
@@ -280,11 +283,12 @@ export default async function HomePage() {
       <section className="py-40 border-t border-border/20 relative overflow-hidden bg-[#02050A]">
         {/* Deep architectural background image for CTA */}
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070"
             alt="Exit strategy"
-            className="w-full h-full object-cover object-center filter grayscale opacity-10"
-            loading="lazy"
+            fill
+            className="object-cover object-center filter grayscale opacity-10"
+            sizes="100vw"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#02050A] via-transparent to-[#02050A] z-0" />

@@ -28,6 +28,7 @@ export function Logo({ className = "" }: { className?: string }) {
                     stroke="currentColor"
                     strokeWidth="1.5"
                     className="text-primary/20"
+                    initial={{ rotate: 0 }}
                     animate={{ rotate: isHovered ? 180 : 0 }}
                     transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
                     style={{ originX: "50px", originY: "50px" }}
@@ -41,6 +42,7 @@ export function Logo({ className = "" }: { className?: string }) {
                     className="text-primary"
                     strokeLinecap="square"
                     strokeLinejoin="bevel"
+                    initial={{ pathLength: 1, opacity: 1 }}
                     animate={{
                         pathLength: isHovered ? [0, 1] : 1,
                         opacity: isHovered ? [0.6, 1] : 1
@@ -55,6 +57,7 @@ export function Logo({ className = "" }: { className?: string }) {
                     strokeWidth="3.5"
                     className="text-primary"
                     strokeLinecap="square"
+                    initial={{ pathLength: 1, opacity: 1 }}
                     animate={{
                         pathLength: isHovered ? [0, 1] : 1,
                         opacity: isHovered ? [0.6, 1] : 1
@@ -69,7 +72,7 @@ export function Logo({ className = "" }: { className?: string }) {
                     r="4"
                     fill="currentColor"
                     className="text-foreground"
-                    initial={{ scale: 1 }}
+                    initial={{ scale: 1, opacity: 0.3 }}
                     animate={{
                         scale: isHovered ? [1, 2.5, 1.2] : 1,
                         opacity: isHovered ? [0.3, 1, 0.8] : 0.3

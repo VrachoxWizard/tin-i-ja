@@ -9,6 +9,7 @@ import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { Preloader } from "@/components/ui/Preloader";
+import { SuppressWarnings } from "@/components/ui/SuppressWarnings";
 import { validateEnv } from "@/lib/env";
 
 if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) {
@@ -77,6 +78,7 @@ export default function RootLayout({
       className={`${inter.variable} ${dmSans.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <SuppressWarnings />
         <NoiseOverlay />
         <ScrollToTop />
         <SmoothScroll>

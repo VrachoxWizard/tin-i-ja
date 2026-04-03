@@ -19,7 +19,6 @@ const navLinks = [
 ];
 
 const EASE_OUT = [0.0, 0.0, 0.2, 1.0] as const;
-const EASE_IN = [0.4, 0.0, 1.0, 1.0] as const;
 const CINEMATIC_EASE = [0.76, 0, 0.24, 1] as const;
 
 const iconVariants = {
