@@ -1,47 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EASE_OUT = [0.0, 0.0, 0.2, 1.0] as const;
 
+function applyTheme(t: "light" | "dark") {
+    const root = document.documentElement;
+    if (t === "dark") {
+        root.classList.add("dark");
+    } else {
+        root.classList.remove("dark");
+    }
+}
+
+function getSnapshot(): "light" | "dark" {
+    const stored = localStorage.getItem("theme") as "light" | "dark" | null;
+    if (stored) return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function getServerSnapshot(): "light" | "dark" {
+    return "dark";
+}
+
+function subscribe(callback: () => void) {
+    const handler = (e: StorageEvent) => {
+        if (e.key === "theme") callback();
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+}
+
 export function ThemeToggle() {
-    const [theme, setTheme] = useState<"light" | "dark">("light");
-    const [mounted, setMounted] = useState(false);
+    const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-    // Read initial theme from document on mount
-    useEffect(() => {
-        setMounted(true);
-        const stored = localStorage.getItem("theme") as "light" | "dark" | null;
-        if (stored) {
-            setTheme(stored);
-            applyTheme(stored);
-        } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            setTheme("dark");
-            applyTheme("dark");
-        }
-    }, []);
-
-    function applyTheme(t: "light" | "dark") {
-        const root = document.documentElement;
-        if (t === "dark") {
-            root.classList.add("dark");
-        } else {
-            root.classList.remove("dark");
-        }
+    // Apply theme on first render + when it changes
+    if (typeof document !== "undefined") {
+        applyTheme(theme);
     }
 
     function toggle() {
         const next = theme === "light" ? "dark" : "light";
-        setTheme(next);
         applyTheme(next);
         localStorage.setItem("theme", next);
-    }
-
-    // Don't render until mounted to prevent hydration mismatch
-    if (!mounted) {
-        return <div className="w-9 h-9" />;
+        // Force re-render by dispatching a storage event
+        window.dispatchEvent(new StorageEvent("storage", { key: "theme", newValue: next }));
     }
 
     return (
