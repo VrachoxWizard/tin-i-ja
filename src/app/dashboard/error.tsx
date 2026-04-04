@@ -5,7 +5,6 @@ import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardError({
-  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
