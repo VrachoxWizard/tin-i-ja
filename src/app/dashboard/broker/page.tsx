@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingStatusBadge } from "@/components/features/ListingStatusBadge";
-import { formatDate } from "@/lib/formatters";
 
 export const metadata: Metadata = {
   title: "Broker Dashboard | DealFlow",

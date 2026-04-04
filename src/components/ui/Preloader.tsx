@@ -9,17 +9,13 @@ export function Preloader({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Skip animation for users who prefer reduced motion
         const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (prefersReduced) {
-            setIsLoading(false);
-            return;
-        }
 
-        window.scrollTo(0, 0);
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, PRELOADER_DURATION_MS);
+        // Use setTimeout (even with 0ms) to avoid synchronous setState inside an effect
+        const delay = prefersReduced ? 0 : PRELOADER_DURATION_MS;
+        if (!prefersReduced) window.scrollTo(0, 0);
+
+        const timer = setTimeout(() => setIsLoading(false), delay);
         return () => clearTimeout(timer);
     }, []);
 
