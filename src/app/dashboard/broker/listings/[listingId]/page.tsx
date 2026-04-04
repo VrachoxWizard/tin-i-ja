@@ -7,24 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrokerNdaActions } from "@/components/features/BrokerActions";
+import { ListingStatusBadge } from "@/components/features/ListingStatusBadge";
+import { NdaStatusBadge } from "@/components/features/NdaStatusBadge";
+import { formatDate, formatEur } from "@/lib/formatters";
 
 export const metadata: Metadata = {
   title: "Detalji oglasa | Broker | DealFlow",
-};
-
-const STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  draft: { label: "Skica", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-  teaser_generated: { label: "Teaser", className: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-  seller_review: { label: "Čeka objavu", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  active: { label: "Aktivno", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  under_nda: { label: "Pod NDA", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20" },
-  closed: { label: "Zatvoreno", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-};
-
-const NDA_BADGES: Record<string, { label: string; className: string }> = {
-  pending: { label: "Na čekanju", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  signed: { label: "Potpisan", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  rejected: { label: "Odbijen", className: "bg-red-500/10 text-red-700 border-red-500/20" },
 };
 
 export default async function BrokerListingDetailPage({
@@ -49,13 +37,13 @@ export default async function BrokerListingDetailPage({
 
   if (profile?.role !== "broker") redirect("/dashboard/buyer");
 
-  const { data: listing } = await supabase
+  const { data: listing, error: listingError } = await supabase
     .from("listings")
     .select("id, company_name, industry_nkd, region, status, public_code, revenue_eur, ebitda_eur, asking_price_eur, employees, year_founded, broker_id, created_at")
     .eq("id", listingId)
     .single();
 
-  if (!listing || listing.broker_id !== user.id) notFound();
+  if (listingError || !listing || listing.broker_id !== user.id) notFound();
 
   const [{ data: ndas }, { data: files }] = await Promise.all([
     supabase
@@ -81,10 +69,6 @@ export default async function BrokerListingDetailPage({
 
   const buyerMap = new Map((buyersData ?? []).map((b) => [b.id, b.full_name || b.email]));
 
-  const statusBadge = STATUS_BADGES[listing.status] ?? STATUS_BADGES.draft;
-
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -104,12 +88,7 @@ export default async function BrokerListingDetailPage({
                 <Building2 className="w-3 h-3 mr-1.5" />
                 Oglas
               </Badge>
-              <Badge
-                variant="outline"
-                className={`rounded-none text-xs ${statusBadge.className}`}
-              >
-                {statusBadge.label}
-              </Badge>
+              <ListingStatusBadge status={listing.status} />
             </div>
             <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
               {listing.company_name}
@@ -130,12 +109,12 @@ export default async function BrokerListingDetailPage({
             <CardContent className="p-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {[
-                  { label: "Prihod", value: formatEur(listing.revenue_eur) },
-                  { label: "EBITDA", value: formatEur(listing.ebitda_eur) },
-                  { label: "Tražena cijena", value: formatEur(listing.asking_price_eur) },
+                  { label: "Prihod", value: formatEur(listing.revenue_eur ?? 0) },
+                  { label: "EBITDA", value: formatEur(listing.ebitda_eur ?? 0) },
+                  { label: "Tražena cijena", value: formatEur(listing.asking_price_eur ?? 0) },
                   { label: "Zaposleni", value: listing.employees },
                   { label: "Godina osnivanja", value: listing.year_founded },
-                  { label: "Kreirano", value: new Date(listing.created_at).toLocaleDateString("hr-HR") },
+                  { label: "Kreirano", value: formatDate(listing.created_at) },
                 ].map((item) => (
                   <div key={item.label}>
                     <p className="text-xs text-muted-foreground uppercase tracking-widest">{item.label}</p>
@@ -162,7 +141,6 @@ export default async function BrokerListingDetailPage({
               ) : (
                 <div className="divide-y divide-border">
                   {allNdas.map((nda) => {
-                    const badge = NDA_BADGES[nda.status] ?? NDA_BADGES.pending;
                     return (
                       <div
                         key={nda.id}
@@ -173,19 +151,12 @@ export default async function BrokerListingDetailPage({
                             {buyerMap.get(nda.buyer_id) ?? nda.buyer_id.slice(0, 8)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Zatraženo: {new Date(nda.created_at).toLocaleDateString("hr-HR")}
-                            {nda.signed_at
-                              ? ` · Potpisano: ${new Date(nda.signed_at).toLocaleDateString("hr-HR")}`
-                              : ""}
+                            Zatraženo: {formatDate(nda.created_at)}
+                            {nda.signed_at ? ` · Potpisano: ${formatDate(nda.signed_at)}` : ""}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs ${badge.className}`}
-                          >
-                            {badge.label}
-                          </Badge>
+                          <NdaStatusBadge status={nda.status} />
                           {nda.status === "pending" && (
                             <BrokerNdaActions ndaId={nda.id} />
                           )}
@@ -228,9 +199,9 @@ export default async function BrokerListingDetailPage({
                         <p className="text-sm font-medium text-foreground truncate">
                           {file.file_path.split("/").pop()}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {file.doc_type} · {new Date(file.uploaded_at).toLocaleDateString("hr-HR")}
-                        </p>
+                          <p className="text-xs text-muted-foreground">
+                            {file.doc_type} · {formatDate(file.uploaded_at)}
+                          </p>
                       </div>
                     </div>
                   ))}

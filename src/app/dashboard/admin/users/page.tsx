@@ -7,20 +7,24 @@ import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminSuspendButton, AdminDeleteUserButton } from "@/components/features/AdminActions";
+import { RoleBadge } from "@/components/features/RoleBadge";
+import { formatDate } from "@/lib/formatters";
+import { Pagination, parsePage } from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 25;
 
 export const metadata: Metadata = {
   title: "Upravljanje korisnicima | Admin | DealFlow",
   description: "Pregled i upravljanje svim korisnicima platforme.",
 };
 
-const ROLE_BADGES: Record<string, { label: string; className: string }> = {
-  buyer: { label: "Kupac", className: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-  seller: { label: "Prodavatelj", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  admin: { label: "Admin", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  broker: { label: "Broker", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20" },
-};
-
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const resolvedParams = await searchParams;
+  const page = parsePage(resolvedParams);
   const supabase = await createClient();
 
   const {
@@ -37,12 +41,30 @@ export default async function AdminUsersPage() {
 
   if (profile?.role !== "admin") redirect("/dashboard/buyer");
 
-  const { data: users } = await supabase
+  const { count } = await supabase
+    .from("users")
+    .select("*", { count: "exact", head: true });
+
+  const { data: users, error: usersError } = await supabase
     .from("users")
     .select("id, full_name, email, role, created_at, suspended_at")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+  if (usersError) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <main className="flex-1 py-12">
+          <div className="container mx-auto px-4 max-w-6xl text-center">
+            <p className="text-destructive">Učitavanje korisnika nije uspjelo.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const allUsers = users ?? [];
+  const totalUsers = count ?? 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -85,7 +107,6 @@ export default async function AdminUsersPage() {
               ) : (
                 <div className="divide-y divide-border">
                   {allUsers.map((u) => {
-                    const roleBadge = ROLE_BADGES[u.role] ?? ROLE_BADGES.buyer;
                     const isSuspended = !!u.suspended_at;
 
                     return (
@@ -108,17 +129,12 @@ export default async function AdminUsersPage() {
                             {u.email}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            Registriran: {new Date(u.created_at).toLocaleDateString("hr-HR")}
+                            Registriran: {formatDate(u.created_at)}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs ${roleBadge.className}`}
-                          >
-                            {roleBadge.label}
-                          </Badge>
+                          <RoleBadge role={u.role} />
 
                           <Link
                             href={`/dashboard/admin/users/${u.id}`}
@@ -144,6 +160,13 @@ export default async function AdminUsersPage() {
                 </div>
               )}
             </CardContent>
+            {totalUsers > PAGE_SIZE && (
+              <Pagination
+                total={totalUsers}
+                pageSize={PAGE_SIZE}
+                currentPage={page}
+              />
+            )}
           </GlowCard>
         </div>
       </main>

@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { NotificationBellServer } from "@/components/features/NotificationBellServer";
 
 export default function DashboardLayout({
   children,
@@ -10,8 +12,13 @@ export default function DashboardLayout({
   return (
     <>
       <Header />
+      <div className="fixed top-3 right-[4.5rem] z-50 hidden lg:block">
+        <Suspense fallback={null}>
+          <NotificationBellServer />
+        </Suspense>
+      </div>
       <PageTransition>
-        <main className="flex-1 flex flex-col relative">
+        <main id="main-content" className="flex-1 flex flex-col relative">
           {/* Subtle grid pattern */}
           <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none z-0" />
           <div className="relative z-10">{children}</div>

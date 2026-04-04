@@ -7,19 +7,24 @@ import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminNdaStatusSelect } from "@/components/features/AdminActions";
+import { NdaStatusBadge } from "@/components/features/NdaStatusBadge";
+import { formatDate } from "@/lib/formatters";
+import { Pagination, parsePage } from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 25;
 
 export const metadata: Metadata = {
   title: "Upravljanje NDA-ima | Admin | DealFlow",
   description: "Pregled i upravljanje NDA zahtjevima.",
 };
 
-const NDA_BADGES: Record<string, { label: string; className: string }> = {
-  pending: { label: "Na čekanju", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  signed: { label: "Potpisan", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  rejected: { label: "Odbijen", className: "bg-red-500/10 text-red-700 border-red-500/20" },
-};
-
-export default async function AdminNdasPage() {
+export default async function AdminNdasPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const resolvedParams = await searchParams;
+  const page = parsePage(resolvedParams);
   const supabase = await createClient();
 
   const {
@@ -36,12 +41,30 @@ export default async function AdminNdasPage() {
 
   if (profile?.role !== "admin") redirect("/dashboard/buyer");
 
-  const { data: ndas } = await supabase
+  const { count: ndasCount } = await supabase
+    .from("ndas")
+    .select("*", { count: "exact", head: true });
+
+  const { data: ndas, error: ndasError } = await supabase
     .from("ndas")
     .select("id, listing_id, buyer_id, status, created_at, signed_at, updated_at")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+  if (ndasError) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <main className="flex-1 py-12">
+          <div className="container mx-auto px-4 max-w-6xl text-center">
+            <p className="text-destructive">Učitavanje NDA zahtjeva nije uspjelo.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const allNdas = ndas ?? [];
+  const totalNdas = ndasCount ?? 0;
 
   // Fetch related listing & buyer names for display
   const listingIds = [...new Set(allNdas.map((n) => n.listing_id))];
@@ -99,10 +122,7 @@ export default async function AdminNdasPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {allNdas.map((nda) => {
-                    const badge = NDA_BADGES[nda.status] ?? NDA_BADGES.pending;
-
-                    return (
+                  {allNdas.map((nda) => (
                       <div
                         key={nda.id}
                         className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3"
@@ -115,20 +135,15 @@ export default async function AdminNdasPage() {
                             Oglas: {listingMap.get(nda.listing_id) ?? nda.listing_id.slice(0, 8)}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            Kreirano: {new Date(nda.created_at).toLocaleDateString("hr-HR")}
+                            Kreirano: {formatDate(nda.created_at)}
                             {nda.signed_at
-                              ? ` · Potpisano: ${new Date(nda.signed_at).toLocaleDateString("hr-HR")}`
+                              ? ` · Potpisano: ${formatDate(nda.signed_at)}`
                               : ""}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs ${badge.className}`}
-                          >
-                            {badge.label}
-                          </Badge>
+                          <NdaStatusBadge status={nda.status} />
 
                           <AdminNdaStatusSelect
                             ndaId={nda.id}
@@ -136,11 +151,17 @@ export default async function AdminNdasPage() {
                           />
                         </div>
                       </div>
-                    );
-                  })}
+                  ))}
                 </div>
               )}
             </CardContent>
+            {totalNdas > PAGE_SIZE && (
+              <Pagination
+                total={totalNdas}
+                pageSize={PAGE_SIZE}
+                currentPage={page}
+              />
+            )}
           </GlowCard>
         </div>
       </main>

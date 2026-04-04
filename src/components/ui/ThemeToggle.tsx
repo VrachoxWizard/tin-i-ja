@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,26 +26,34 @@ function getServerSnapshot(): "light" | "dark" {
 }
 
 function subscribe(callback: () => void) {
-    const handler = (e: StorageEvent) => {
+    const storageHandler = (e: StorageEvent) => {
         if (e.key === "theme") callback();
     };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    const mediaHandler = () => callback();
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+
+    window.addEventListener("storage", storageHandler);
+    mql.addEventListener("change", mediaHandler);
+
+    return () => {
+        window.removeEventListener("storage", storageHandler);
+        mql.removeEventListener("change", mediaHandler);
+    };
 }
 
 export function ThemeToggle() {
     const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-    // Apply theme on first render + when it changes
-    if (typeof document !== "undefined") {
+    // Apply theme after React commits, so it wins over React's className reconciliation
+    useEffect(() => {
         applyTheme(theme);
-    }
+    }, [theme]);
 
     function toggle() {
         const next = theme === "light" ? "dark" : "light";
         applyTheme(next);
         localStorage.setItem("theme", next);
-        // Force re-render by dispatching a storage event
+        // Trigger re-render via storage event (cross-tab sync + same-tab update)
         window.dispatchEvent(new StorageEvent("storage", { key: "theme", newValue: next }));
     }
 

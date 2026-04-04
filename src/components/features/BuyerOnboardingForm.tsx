@@ -30,6 +30,45 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { BUYER_INDUSTRIES, REGIONS } from "@/data/constants";
 
+function ToggleChips({
+  options,
+  selected,
+  onChange,
+}: {
+  options: readonly string[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  function toggle(option: string) {
+    onChange(
+      selected.includes(option)
+        ? selected.filter((s) => s !== option)
+        : [...selected, option],
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const active = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => toggle(opt)}
+            className={`px-3 py-1.5 text-xs font-medium border transition-colors rounded-none ${
+              active
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border hover:border-primary/60 hover:text-foreground"
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function BuyerOnboardingForm() {
   const [step, setStep] = useState(1);
   const [result, setResult] = useState<ActionResult | null>(null);
@@ -40,8 +79,8 @@ export function BuyerOnboardingForm() {
     target_ev_max: "",
     target_revenue_min: "",
     target_revenue_max: "",
-    target_industries: "",
-    target_regions: "",
+    target_industries: [] as string[],
+    target_regions: [] as string[],
     investment_thesis: "",
   });
 
@@ -55,8 +94,8 @@ export function BuyerOnboardingForm() {
       2:
         !!formData.target_revenue_min &&
         !!formData.target_revenue_max &&
-        !!formData.target_industries &&
-        !!formData.target_regions &&
+        formData.target_industries.length > 0 &&
+        formData.target_regions.length > 0 &&
         Number(formData.target_revenue_min) <=
           Number(formData.target_revenue_max),
       3: formData.investment_thesis.trim().length >= 12,
@@ -98,7 +137,11 @@ export function BuyerOnboardingForm() {
 
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      payload.set(key, value);
+      if (Array.isArray(value)) {
+        payload.set(key, value.join(","));
+      } else {
+        payload.set(key, value);
+      }
     });
 
     startTransition(async () => {
@@ -289,47 +332,41 @@ export function BuyerOnboardingForm() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-5">
                   <div className="space-y-3">
-                    <Label>Primarni sektor interesa</Label>
-                    <Select
-                      value={formData.target_industries}
-                      onValueChange={(value) =>
-                        handleSelectChange("target_industries", value)
+                    <div className="flex items-center justify-between">
+                      <Label>Sektori interesa</Label>
+                      <span className="text-xs text-muted-foreground">
+                        {formData.target_industries.length > 0
+                          ? `${formData.target_industries.length} odabrano`
+                          : "Odaberite jedan ili više"}
+                      </span>
+                    </div>
+                    <ToggleChips
+                      options={BUYER_INDUSTRIES}
+                      selected={formData.target_industries}
+                      onChange={(next) =>
+                        setFormData((prev) => ({ ...prev, target_industries: next }))
                       }
-                    >
-                      <SelectTrigger className="h-12 rounded-none">
-                        <SelectValue placeholder="Odaberite sektor" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        {BUYER_INDUSTRIES.map((industry) => (
-                          <SelectItem key={industry} value={industry}>
-                            {industry}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
 
                   <div className="space-y-3">
-                    <Label>Primarna regija</Label>
-                    <Select
-                      value={formData.target_regions}
-                      onValueChange={(value) =>
-                        handleSelectChange("target_regions", value)
+                    <div className="flex items-center justify-between">
+                      <Label>Regije interesa</Label>
+                      <span className="text-xs text-muted-foreground">
+                        {formData.target_regions.length > 0
+                          ? `${formData.target_regions.length} odabrano`
+                          : "Odaberite jednu ili više"}
+                      </span>
+                    </div>
+                    <ToggleChips
+                      options={REGIONS}
+                      selected={formData.target_regions}
+                      onChange={(next) =>
+                        setFormData((prev) => ({ ...prev, target_regions: next }))
                       }
-                    >
-                      <SelectTrigger className="h-12 rounded-none">
-                        <SelectValue placeholder="Odaberite regiju" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        {REGIONS.map((region) => (
-                          <SelectItem key={region} value={region}>
-                            {region}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                 </div>
               </motion.div>

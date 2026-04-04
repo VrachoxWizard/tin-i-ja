@@ -72,16 +72,30 @@ export default function RootLayout({
   return (
     <html
       lang="hr"
-      className={`dark ${inter.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${inter.variable} ${dmSans.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Blocking theme script: runs before first paint to set dark/light class without flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark');}else if(t==='light'){document.documentElement.classList.remove('dark');} else{document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-none focus:text-sm focus:font-medium"
+        >
+          Preskoči na sadržaj
+        </a>
         <NoiseOverlay />
         <Preloader>
           {children}
         </Preloader>
         <Toaster
-          theme="dark"
+          theme="system"
           position="top-right"
           toastOptions={{
             style: {

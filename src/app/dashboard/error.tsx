@@ -21,7 +21,7 @@ export default function DashboardError({
           Greška pri učitavanju
         </h2>
         <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-          {error.message || "Došlo je do pogreške. Pokušajte ponovo."}
+          Došlo je do pogreške pri učitavanju. Pokušajte ponovo.
         </p>
         <div className="flex gap-3 justify-center">
           <Button

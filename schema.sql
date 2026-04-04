@@ -10,6 +10,7 @@ create table public.users (
   role text check (role in ('buyer', 'seller', 'broker', 'admin')) not null,
   full_name text not null,
   email text not null,
+  suspended_at timestamptz,
   created_at timestamptz default now() not null
 );
 
@@ -17,6 +18,7 @@ create table public.listings (
   id uuid default uuid_generate_v4() primary key,
   public_code text unique,
   owner_id uuid references public.users(id) not null,
+  broker_id uuid references public.users(id),
   company_name text not null,
   status text check (
     status in (
@@ -91,6 +93,16 @@ create table public.matches (
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null,
   unique (listing_id, buyer_profile_id)
+);
+
+create table public.audit_logs (
+  id uuid default uuid_generate_v4() primary key,
+  actor_id uuid references public.users(id) not null,
+  action text not null,
+  entity_type text not null,
+  entity_id uuid,
+  metadata jsonb default '{}'::jsonb not null,
+  created_at timestamptz default now() not null
 );
 
 create table public.rate_limits (
@@ -291,7 +303,51 @@ create policy "matches_select_policy" on public.matches
     )
   );
 
+-- matches are written only by security-definer functions (syncMatchesForListing / syncMatchesForBuyerProfile)
+-- These policies allow the functions to upsert/delete without requiring caller-level RLS bypass.
+create policy "Service role can insert matches" on public.matches
+  for insert with check (
+    exists (
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
+    )
+    or listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
+    )
+    or buyer_profile_id in (
+      select id from public.buyer_profiles where user_id = (select auth.uid())
+    )
+  );
+
+create policy "Service role can update matches" on public.matches
+  for update using (
+    exists (
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
+    )
+    or listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
+    )
+    or buyer_profile_id in (
+      select id from public.buyer_profiles where user_id = (select auth.uid())
+    )
+  );
+
+create policy "Service role can delete matches" on public.matches
+  for delete using (
+    exists (
+      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
+    )
+    or listing_id in (
+      select id from public.listings where owner_id = (select auth.uid())
+    )
+    or buyer_profile_id in (
+      select id from public.buyer_profiles where user_id = (select auth.uid())
+    )
+  );
+
 -- ─── audit_logs ────────────────────────────────────────────────────────────────
+create index audit_logs_actor_id_idx on public.audit_logs (actor_id);
+create index audit_logs_created_at_idx on public.audit_logs (created_at desc);
+
 alter table public.audit_logs enable row level security;
 create policy "Admins can view audit logs" on public.audit_logs
   for select using (
@@ -370,11 +426,62 @@ create policy "Authorized users can read deal room storage objects" on storage.o
       )
       or exists (
         select 1
+        from public.listings
+        where listings.id::text = (storage.foldername(name))[1]
+          and listings.broker_id = (select auth.uid())
+      )
+      or exists (
+        select 1
         from public.ndas
         where ndas.listing_id::text = (storage.foldername(name))[1]
           and ndas.buyer_id = (select auth.uid())
           and ndas.status = 'signed'
       )
+    )
+  );
+
+create policy "Brokers can upload deal room storage objects" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'deal-room-files'
+    and exists (
+      select 1
+      from public.listings
+      where listings.id::text = (storage.foldername(name))[1]
+        and listings.broker_id = (select auth.uid())
+    )
+  );
+
+create policy "Brokers can update deal room storage objects" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'deal-room-files'
+    and exists (
+      select 1
+      from public.listings
+      where listings.id::text = (storage.foldername(name))[1]
+        and listings.broker_id = (select auth.uid())
+    )
+  )
+  with check (
+    bucket_id = 'deal-room-files'
+    and exists (
+      select 1
+      from public.listings
+      where listings.id::text = (storage.foldername(name))[1]
+        and listings.broker_id = (select auth.uid())
+    )
+  );
+
+create policy "Brokers can delete deal room storage objects" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'deal-room-files'
+    and exists (
+      select 1
+      from public.listings
+      where listings.id::text = (storage.foldername(name))[1]
+        and listings.broker_id = (select auth.uid())
     )
   );
 
@@ -507,6 +614,271 @@ begin
         order by created_at desc
         limit 10
       ) u
+    )
+  ) into result;
+
+  return result;
+end;
+$$;
+
+-- ─── notifications ───────────────────────────────────────────────────────────
+create table public.notifications (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  type text not null check (type in ('nda_request', 'nda_approved', 'nda_rejected', 'match_found', 'deal_room_upload')),
+  title text not null,
+  body text not null,
+  entity_id uuid,
+  read_at timestamptz,
+  created_at timestamptz default now() not null
+);
+
+create index notifications_user_id_idx on public.notifications (user_id, read_at nulls first, created_at desc);
+
+alter table public.notifications enable row level security;
+
+create policy "Users can view their own notifications" on public.notifications
+  for select using (user_id = (select auth.uid()));
+
+create policy "Users can mark their own notifications as read" on public.notifications
+  for update using (user_id = (select auth.uid()))
+  with check (user_id = (select auth.uid()));
+
+create policy "Service role inserts notifications" on public.notifications
+  for insert with check (
+    exists (
+      select 1 from public.users where id = (select auth.uid()) and role in ('admin', 'broker', 'seller')
+    )
+  );
+
+-- Helper to create a notification for a user (called from server actions)
+create or replace function public.create_notification(
+  p_user_id uuid,
+  p_type text,
+  p_title text,
+  p_body text,
+  p_entity_id uuid default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.notifications (user_id, type, title, body, entity_id)
+  values (p_user_id, p_type, p_title, p_body, p_entity_id);
+end;
+$$;
+
+-- ─── log_audit_event ───────────────────────────────────────────────────────────
+create or replace function public.log_audit_event(
+  p_action text,
+  p_entity_type text,
+  p_entity_id uuid default null,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.audit_logs (actor_id, action, entity_type, entity_id, metadata)
+  values (auth.uid(), p_action, p_entity_type, p_entity_id, coalesce(p_metadata, '{}'::jsonb));
+end;
+$$;
+
+-- ─── admin_update_user ─────────────────────────────────────────────────────────
+create or replace function public.admin_update_user(
+  p_user_id uuid,
+  p_full_name text default null,
+  p_email text default null,
+  p_role text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  update public.users
+  set
+    full_name = coalesce(p_full_name, full_name),
+    email = coalesce(p_email, email),
+    role = coalesce(p_role, role)
+  where id = p_user_id;
+end;
+$$;
+
+-- ─── admin_toggle_suspend_user ─────────────────────────────────────────────────
+create or replace function public.admin_toggle_suspend_user(
+  p_user_id uuid,
+  p_suspend boolean
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  update public.users
+  set suspended_at = case when p_suspend then now() else null end
+  where id = p_user_id;
+end;
+$$;
+
+-- ─── admin_delete_user ─────────────────────────────────────────────────────────
+create or replace function public.admin_delete_user(
+  p_user_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  -- Delete dependent records first
+  delete from public.matches
+  where listing_id in (select id from public.listings where owner_id = p_user_id)
+     or buyer_profile_id in (select id from public.buyer_profiles where user_id = p_user_id);
+
+  delete from public.ndas
+  where buyer_id = p_user_id
+     or listing_id in (select id from public.listings where owner_id = p_user_id);
+
+  delete from public.deal_room_files
+  where listing_id in (select id from public.listings where owner_id = p_user_id);
+
+  delete from public.listings where owner_id = p_user_id;
+  delete from public.buyer_profiles where user_id = p_user_id;
+  delete from public.users where id = p_user_id;
+
+  -- Delete from auth.users (requires service role, called via Supabase admin API)
+  delete from auth.users where id = p_user_id;
+end;
+$$;
+
+-- ─── admin_update_listing_status ──────────────────────────────────────────────
+create or replace function public.admin_update_listing_status(
+  p_listing_id uuid,
+  p_status text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  update public.listings
+  set status = p_status, updated_at = now()
+  where id = p_listing_id;
+end;
+$$;
+
+-- ─── admin_delete_listing ─────────────────────────────────────────────────────
+create or replace function public.admin_delete_listing(
+  p_listing_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  delete from public.matches where listing_id = p_listing_id;
+  delete from public.deal_room_files where listing_id = p_listing_id;
+  delete from public.ndas where listing_id = p_listing_id;
+  delete from public.listings where id = p_listing_id;
+end;
+$$;
+
+-- ─── admin_manage_nda ────────────────────────────────────────────────────────
+create or replace function public.admin_manage_nda(
+  p_nda_id uuid,
+  p_status text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
+    raise exception 'Forbidden';
+  end if;
+
+  update public.ndas
+  set
+    status = p_status,
+    signed_at = case when p_status = 'signed' then now() else null end,
+    updated_at = now()
+  where id = p_nda_id;
+end;
+$$;
+
+-- ─── broker_overview ─────────────────────────────────────────────────────────
+create or replace function public.broker_overview()
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  result json;
+begin
+  if not exists (
+    select 1 from public.users
+    where id = auth.uid() and role = 'broker'
+  ) then
+    raise exception 'Forbidden';
+  end if;
+
+  select json_build_object(
+    'total_assigned', (
+      select count(*) from public.listings where broker_id = auth.uid()
+    ),
+    'active_assigned', (
+      select count(*) from public.listings
+      where broker_id = auth.uid() and status in ('active', 'under_nda')
+    ),
+    'total_ndas', (
+      select count(*) from public.ndas
+      where listing_id in (select id from public.listings where broker_id = auth.uid())
+    ),
+    'pending_ndas', (
+      select count(*) from public.ndas
+      where listing_id in (select id from public.listings where broker_id = auth.uid())
+        and status = 'pending'
+    ),
+    'recent_listings', (
+      select coalesce(json_agg(row_to_json(l)), '[]'::json)
+      from (
+        select id, public_code, company_name, industry_nkd, region, status, created_at
+        from public.listings
+        where broker_id = auth.uid()
+        order by created_at desc
+        limit 20
+      ) l
     )
   ) into result;
 

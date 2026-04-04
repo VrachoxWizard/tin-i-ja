@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TeaserCard } from "@/components/features/TeaserCard";
 import { Button } from "@/components/ui/button";
 import { FadeInView } from "@/components/ui/FadeInView";
-import { Hero3DLazy } from "@/components/ui/Hero3DLazy";
+import { Hero3D } from "@/components/hero-3d";
 import { Magnetic } from "@/components/ui/Magnetic";
 
 export const metadata: Metadata = {
@@ -53,7 +53,7 @@ export default async function HomePage() {
 
       {/* ── AVANT-GARDE HERO ───────────────────────────────────────────────────── */}
       <section className="relative min-h-[100vh] flex items-center border-b border-border/20 pt-20">
-        <Hero3DLazy />
+        <Hero3D />
 
         {/* Abstract large typography background element */}
         <div className="absolute top-1/4 left-[-5%] text-[15vw] font-heading font-black text-foreground/5 whitespace-nowrap pointer-events-none select-none overflow-hidden z-[1] tracking-tighter mix-blend-overlay">

@@ -15,6 +15,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListingStatusBadge } from "@/components/features/ListingStatusBadge";
+import { RoleBadge } from "@/components/features/RoleBadge";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | DealFlow",
@@ -47,33 +49,6 @@ interface AdminOverview {
   }[];
 }
 
-const ROLE_BADGES: Record<string, { label: string; className: string }> = {
-  buyer: {
-    label: "Kupac",
-    className: "bg-blue-500/10 text-blue-700 border-blue-500/20",
-  },
-  seller: {
-    label: "Prodavatelj",
-    className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  },
-  admin: {
-    label: "Admin",
-    className: "bg-amber-500/10 text-amber-700 border-amber-500/20",
-  },
-  broker: {
-    label: "Broker",
-    className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20",
-  },
-};
-
-const STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  draft: { label: "Skica", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-  teaser_generated: { label: "Teaser", className: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-  seller_review: { label: "Čeka objavu", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  active: { label: "Aktivno", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  under_nda: { label: "Pod NDA", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20" },
-  closed: { label: "Zatvoreno", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-};
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -195,31 +170,25 @@ export default async function AdminDashboardPage() {
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {data.recent_listings.map((listing) => {
-                      const badge = STATUS_BADGES[listing.status] ?? STATUS_BADGES.draft;
-                      return (
-                        <div
-                          key={listing.id}
-                          className="flex items-center justify-between p-4"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {listing.company_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {listing.industry_nkd} · {listing.region}
-                              {listing.public_code ? ` · ${listing.public_code}` : ""}
-                            </p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs shrink-0 ${badge.className}`}
-                          >
-                            {badge.label}
-                          </Badge>
+                    {data.recent_listings.map((listing) => (
+                      <div
+                        key={listing.id}
+                        className="flex items-center justify-between p-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {listing.company_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {listing.industry_nkd} · {listing.region}
+                            {listing.public_code ? ` · ${listing.public_code}` : ""}
+                          </p>
                         </div>
-                      );
-                    })}
+                        <div className="shrink-0">
+                          <ListingStatusBadge status={listing.status} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -238,30 +207,24 @@ export default async function AdminDashboardPage() {
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {data.recent_users.map((u) => {
-                      const badge = ROLE_BADGES[u.role] ?? ROLE_BADGES.buyer;
-                      return (
-                        <div
-                          key={u.id}
-                          className="flex items-center justify-between p-4"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {u.full_name || "Bez imena"}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {u.email}
-                            </p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs shrink-0 ${badge.className}`}
-                          >
-                            {badge.label}
-                          </Badge>
+                    {data.recent_users.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between p-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {u.full_name || "Bez imena"}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {u.email}
+                          </p>
                         </div>
-                      );
-                    })}
+                        <div className="shrink-0">
+                          <RoleBadge role={u.role} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>

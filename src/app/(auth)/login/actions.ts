@@ -31,6 +31,8 @@ export async function login(formData: FormData) {
       dashboardPath = '/dashboard/admin'
     } else if (profileData?.role === 'seller') {
       dashboardPath = '/dashboard/seller'
+    } else if (profileData?.role === 'broker') {
+      dashboardPath = '/dashboard/broker'
     }
   }
 

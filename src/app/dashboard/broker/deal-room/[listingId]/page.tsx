@@ -1,21 +1,16 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import {
-  ArrowLeft,
-  FileText,
-  Lock,
-  ShieldCheck,
-  Upload,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, Lock, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createDealRoomSignedUrl } from "@/lib/deal-room";
 import { BrokerDealRoomUploadForm } from "@/components/features/BrokerDealRoomUploadForm";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DealRoomFileList } from "@/components/features/DealRoomFileList";
+import { DealRoomApprovedBuyers } from "@/components/features/DealRoomApprovedBuyers";
+import type { BuyerInfo } from "@/components/features/DealRoomApprovedBuyers";
 
 export const metadata: Metadata = {
   title: "Deal Room | Broker | DealFlow",
@@ -67,20 +62,18 @@ export default async function BrokerDealRoomPage({
 
   const signedBuyerIds = Array.from(
     new Set(
-      (ndaRows ?? [])
-        .filter((nda) => nda.status === "signed")
-        .map((nda) => nda.buyer_id),
+      (ndaRows ?? []).filter((nda) => nda.status === "signed").map((nda) => nda.buyer_id),
     ),
   );
 
   const { data: buyers } = signedBuyerIds.length
-    ? await supabase
-        .from("users")
-        .select("id, full_name, email")
-        .in("id", signedBuyerIds)
+    ? await supabase.from("users").select("id, full_name, email").in("id", signedBuyerIds)
     : { data: [] };
 
-  const buyerMap = new Map((buyers ?? []).map((buyer) => [buyer.id, buyer]));
+  const buyerMap = new Map(
+    (buyers as BuyerInfo[] ?? []).map((buyer) => [buyer.id, buyer]),
+  );
+
   const fileEntries = await Promise.all(
     (files ?? []).map(async (file) => ({
       ...file,
@@ -106,16 +99,10 @@ export default async function BrokerDealRoomPage({
                 <Lock className="w-3 h-3 mr-1.5" />
                 Deal room · Broker
               </Badge>
-              <Badge
-                variant="outline"
-                className="border-border text-muted-foreground rounded-none uppercase tracking-widest text-xs px-3 py-1"
-              >
+              <Badge variant="outline" className="border-border text-muted-foreground rounded-none uppercase tracking-widest text-xs px-3 py-1">
                 {listing.public_code}
               </Badge>
-              <Badge
-                variant="outline"
-                className="border-border text-muted-foreground rounded-none uppercase tracking-widest text-xs px-3 py-1"
-              >
+              <Badge variant="outline" className="border-border text-muted-foreground rounded-none uppercase tracking-widest text-xs px-3 py-1">
                 {listing.status}
               </Badge>
             </div>
@@ -140,128 +127,23 @@ export default async function BrokerDealRoomPage({
                   <div className="flex items-start gap-3 mb-6 text-sm text-muted-foreground">
                     <Upload className="w-4 h-4 mt-0.5 text-primary" />
                     <p>
-                      Datoteke se spremaju u privatni storage i kupci im mogu
-                      pristupiti samo kroz vremenski ograničene signed URL-ove
-                      nakon odobrenog NDA-a.
+                      Datoteke se spremaju u privatni storage i kupci im mogu pristupiti samo
+                      kroz vremenski ograničene signed URL-ove nakon odobrenog NDA-a.
                     </p>
                   </div>
                   <BrokerDealRoomUploadForm listingId={listingId} />
                 </CardContent>
               </GlowCard>
 
-              <GlowCard className="rounded-none border border-border overflow-hidden bg-card">
-                <CardHeader className="border-b border-border">
-                  <CardTitle className="text-base font-heading uppercase tracking-widest text-foreground">
-                    Trenutni dokumenti
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {fileEntries.length > 0 ? (
-                    <div className="space-y-3">
-                      {fileEntries.map((file) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between p-4 bg-muted/20 border border-border rounded-none"
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-primary" />
-                            <div>
-                              <p className="text-sm font-medium text-foreground">
-                                {file.file_path.split("/").pop() || file.doc_type}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {file.doc_type} ·{" "}
-                                {new Date(file.uploaded_at).toLocaleDateString("hr-HR")}
-                              </p>
-                            </div>
-                          </div>
-                          {file.signedUrl ? (
-                            <a
-                              href={file.signedUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button variant="outline" className="rounded-none">
-                                Pregledaj
-                              </Button>
-                            </a>
-                          ) : (
-                            <Button variant="outline" className="rounded-none" disabled>
-                              Nedostupno
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-border rounded-none">
-                      <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        Još nema dodanih dokumenata.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </GlowCard>
+              <DealRoomFileList files={fileEntries} />
             </div>
 
             <div className="space-y-6">
-              <GlowCard className="rounded-none border border-border overflow-hidden bg-card">
-                <CardHeader className="border-b border-border">
-                  <CardTitle className="text-base font-heading uppercase tracking-widest text-foreground">
-                    Odobreni investitori
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center gap-3 p-4 bg-muted/20 border border-border rounded-none">
-                    <Users className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {signedBuyerIds.length} investitora
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        trenutno ima pristup dokumentima
-                      </p>
-                    </div>
-                  </div>
-
-                  {signedBuyerIds.length === 0 ? (
-                    <div className="border border-dashed border-border rounded-none p-6 text-center">
-                      <ShieldCheck className="w-8 h-8 text-primary mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        Nijedan investitor još nema otključan deal room.
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {signedBuyerIds.map((buyerId) => {
-                    const buyer = buyerMap.get(buyerId);
-                    const signedNda = ndaRows?.find(
-                      (nda) => nda.buyer_id === buyerId && nda.status === "signed",
-                    );
-
-                    return (
-                      <div
-                        key={buyerId}
-                        className="border border-border rounded-none p-4 bg-muted/20"
-                      >
-                        <p className="font-medium text-foreground">
-                          {buyer?.full_name || "Investitor"}
-                        </p>
-                        <p className="text-sm text-muted-foreground break-all">
-                          {buyer?.email || "Email nije dostupan"}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          NDA odobren{" "}
-                          {signedNda?.signed_at
-                            ? new Date(signedNda.signed_at).toLocaleDateString("hr-HR")
-                            : ""}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </GlowCard>
+              <DealRoomApprovedBuyers
+                signedBuyerIds={signedBuyerIds}
+                buyerMap={buyerMap}
+                ndaRows={ndaRows ?? []}
+              />
             </div>
           </div>
         </div>

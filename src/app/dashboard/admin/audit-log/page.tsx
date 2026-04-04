@@ -41,11 +41,23 @@ export default async function AdminAuditLogPage() {
 
   if (profile?.role !== "admin") redirect("/dashboard/buyer");
 
-  const { data: logs } = await supabase
+  const { data: logs, error: logsError } = await supabase
     .from("audit_logs")
     .select("id, actor_id, action, entity_type, entity_id, metadata, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
+
+  if (logsError) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <main className="flex-1 py-12">
+          <div className="container mx-auto px-4 max-w-6xl text-center">
+            <p className="text-destructive">Učitavanje zapisnika nije uspjelo.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const allLogs = logs ?? [];
 

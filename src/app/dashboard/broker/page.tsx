@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListingStatusBadge } from "@/components/features/ListingStatusBadge";
+import { formatDate } from "@/lib/formatters";
 
 export const metadata: Metadata = {
   title: "Broker Dashboard | DealFlow",
@@ -34,14 +36,6 @@ interface BrokerOverview {
   }[];
 }
 
-const STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  draft: { label: "Skica", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-  teaser_generated: { label: "Teaser", className: "bg-blue-500/10 text-blue-700 border-blue-500/20" },
-  seller_review: { label: "Čeka objavu", className: "bg-amber-500/10 text-amber-700 border-amber-500/20" },
-  active: { label: "Aktivno", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
-  under_nda: { label: "Pod NDA", className: "bg-indigo-500/10 text-indigo-700 border-indigo-500/20" },
-  closed: { label: "Zatvoreno", className: "bg-slate-500/10 text-slate-700 border-slate-500/20" },
-};
 
 export default async function BrokerDashboardPage() {
   const supabase = await createClient();
@@ -134,9 +128,7 @@ export default async function BrokerDashboardPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {data.recent_listings.map((listing) => {
-                    const badge = STATUS_BADGES[listing.status] ?? STATUS_BADGES.draft;
-                    return (
+                  {data.recent_listings.map((listing) => (
                       <Link
                         key={listing.id}
                         href={`/dashboard/broker/listings/${listing.id}`}
@@ -152,17 +144,11 @@ export default async function BrokerDashboardPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant="outline"
-                            className={`rounded-none text-xs ${badge.className}`}
-                          >
-                            {badge.label}
-                          </Badge>
+                          <ListingStatusBadge status={listing.status} />
                           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                       </Link>
-                    );
-                  })}
+                  ))}
                 </div>
               )}
             </CardContent>

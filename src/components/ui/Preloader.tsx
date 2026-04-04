@@ -3,15 +3,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const PRELOADER_DURATION_MS = 1200;
+
 export function Preloader({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Snap to top and hold the loader for 1.8s
+        // Skip animation for users who prefer reduced motion
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (prefersReduced) {
+            setIsLoading(false);
+            return;
+        }
+
         window.scrollTo(0, 0);
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 1200);
+        }, PRELOADER_DURATION_MS);
         return () => clearTimeout(timer);
     }, []);
 

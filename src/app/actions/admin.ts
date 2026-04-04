@@ -5,22 +5,12 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit";
 import type { ActionResult } from "@/app/actions/dealflow";
-
-const VALID_ROLES = ["buyer", "seller", "broker", "admin"] as const;
-const VALID_LISTING_STATUSES = [
-  "draft",
-  "teaser_generated",
-  "seller_review",
-  "active",
-  "under_nda",
-  "closed",
-] as const;
-const VALID_NDA_STATUSES = ["pending", "signed", "rejected"] as const;
+import { USER_ROLES, LISTING_STATUSES, NDA_STATUSES } from "@/lib/contracts";
 
 const updateUserSchema = z.object({
   full_name: z.string().min(1).max(120).optional(),
   email: z.string().email().optional(),
-  role: z.enum(VALID_ROLES).optional(),
+  role: z.enum(USER_ROLES).optional(),
 });
 
 const updateListingSchema = z.object({
@@ -210,7 +200,7 @@ export async function adminChangeListingStatusAction(
   listingId: string,
   status: string,
 ): Promise<ActionResult> {
-  const parsed = z.enum(VALID_LISTING_STATUSES).safeParse(status);
+  const parsed = z.enum(LISTING_STATUSES).safeParse(status);
   if (!parsed.success) {
     return { error: "Nepoznat status oglasa." };
   }
@@ -280,7 +270,7 @@ export async function adminManageNdaAction(
   ndaId: string,
   status: string,
 ): Promise<ActionResult> {
-  const parsed = z.enum(VALID_NDA_STATUSES).safeParse(status);
+  const parsed = z.enum(NDA_STATUSES).safeParse(status);
   if (!parsed.success) {
     return { error: "Nepoznat NDA status." };
   }

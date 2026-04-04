@@ -12,6 +12,7 @@ import { DEAL_ROOM_BUCKET } from "@/lib/deal-room";
 import { BUYER_TYPES } from "@/lib/contracts";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validation";
+import { performNdaReview } from "@/lib/nda-review";
 
 const uuidSchema = z.string().uuid("Neispravan ID.");
 
@@ -402,7 +403,7 @@ export async function reviewNdaAction(
 
   const { data: nda } = await supabase
     .from("ndas")
-    .select("id, listing_id")
+    .select("id, listing_id, status")
     .eq("id", ndaId)
     .single();
 
@@ -418,36 +419,11 @@ export async function reviewNdaAction(
     return { error: "NDA zahtjev nije pronađen." };
   }
 
-  const nextStatus = decision === "approve" ? "signed" : "rejected";
-  const { error } = await supabase
-    .from("ndas")
-    .update({
-      status: nextStatus,
-      signed_at: decision === "approve" ? new Date().toISOString() : null,
-    })
-    .eq("id", ndaId);
-
-  if (error) {
-    return { error: "Ažuriranje NDA statusa nije uspjelo." };
+  if (nda.status !== "pending") {
+    return { error: "NDA zahtjev je već obrađen." };
   }
 
-  if (decision === "approve") {
-    await supabase
-      .from("listings")
-      .update({ status: "under_nda" })
-      .eq("id", nda.listing_id);
-  }
-
-  revalidatePath("/dashboard/seller");
-  revalidatePath("/dashboard/buyer");
-
-  return {
-    success: true,
-    message:
-      decision === "approve"
-        ? "NDA je odobren i deal room je otključan."
-        : "NDA zahtjev je odbijen.",
-  };
+  return performNdaReview(supabase, ndaId, nda.listing_id, decision, ["/dashboard/seller"]);
 }
 
 export async function uploadDealRoomFileAction(

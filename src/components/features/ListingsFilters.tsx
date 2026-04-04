@@ -102,7 +102,7 @@ export function ListingsSidebar() {
             Industrija
           </Label>
           <Select
-            defaultValue={searchParams.get("industry") ?? "all"}
+            value={searchParams.get("industry") ?? "all"}
             onValueChange={(v: string | null) => handleFilter("industry", v ?? "all")}
           >
             <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-none font-sans text-foreground">
@@ -125,7 +125,7 @@ export function ListingsSidebar() {
             Regija
           </Label>
           <Select
-            defaultValue={searchParams.get("region") ?? "all"}
+            value={searchParams.get("region") ?? "all"}
             onValueChange={(v: string | null) => handleFilter("region", v ?? "all")}
           >
             <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-none font-sans text-foreground">
@@ -148,7 +148,7 @@ export function ListingsSidebar() {
             EBITDA Raspon
           </Label>
           <Select
-            defaultValue={searchParams.get("ebitda") ?? "any"}
+            value={searchParams.get("ebitda") ?? "any"}
             onValueChange={(v: string | null) => handleFilter("ebitda", v ?? "any")}
           >
             <SelectTrigger className="w-full bg-white/5 border-white/10 h-12 rounded-none font-sans text-foreground">
@@ -190,7 +190,7 @@ export function ListingsSort() {
         Poredaj po:
       </span>
       <Select
-        defaultValue={searchParams.get("sort") ?? "newest"}
+        value={searchParams.get("sort") ?? "newest"}
         onValueChange={(v: string | null) => handleSort(v ?? "newest")}
       >
         <SelectTrigger className="w-48 bg-white/5 border-white/10 h-10 rounded-none font-sans text-foreground">
