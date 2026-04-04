@@ -2,17 +2,31 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/database.types";
 
 export type AuditAction =
+  // User management (admin)
   | "user.update"
   | "user.suspend"
   | "user.unsuspend"
   | "user.delete"
+  // Listing lifecycle
+  | "listing.create"
   | "listing.update"
   | "listing.status_change"
   | "listing.delete"
   | "listing.assign_broker"
-  | "nda.override";
+  | "listing.publish"
+  | "listing.archive"
+  // NDA workflow
+  | "nda.request"
+  | "nda.approve"
+  | "nda.reject"
+  | "nda.override"
+  // Deal room
+  | "file.upload"
+  // Auth events
+  | "auth.login"
+  | "auth.logout";
 
-export type AuditEntityType = "user" | "listing" | "nda";
+export type AuditEntityType = "user" | "listing" | "nda" | "file" | "session";
 
 /**
  * Log an audit event via the security-definer RPC function.

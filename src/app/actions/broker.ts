@@ -114,7 +114,7 @@ export async function brokerUploadDealRoomFileAction(
     return { error: "Previše uploada. Pokušajte ponovno za minutu." };
   }
 
-  const uploadResult = validateDealRoomUpload(formData);
+  const uploadResult = await validateDealRoomUpload(formData);
   if (!uploadResult.ok) {
     return { error: uploadResult.error };
   }

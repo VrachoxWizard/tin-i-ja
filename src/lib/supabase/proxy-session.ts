@@ -2,6 +2,62 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 
+// ── Security headers applied to every response ─────────────────────────────
+function buildSecurityHeaders(response: NextResponse): NextResponse {
+  // Prevent clickjacking
+  response.headers.set("X-Frame-Options", "DENY");
+  // Stop MIME sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  // Minimal referrer info on cross-origin requests
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  // HSTS: force HTTPS for 1 year, include subdomains, allow preload
+  response.headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains; preload",
+  );
+  // Disable unnecessary browser features
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  );
+  // Remove server fingerprint header (also set in next.config.ts)
+  response.headers.delete("X-Powered-By");
+
+  // Content-Security-Policy — tuned for Next.js + Supabase + Vercel
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dealflow.hr";
+
+  const csp = [
+    `default-src 'self'`,
+    // Scripts: self + Vercel analytics/insights (inline hashes managed by Next.js)
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live`,
+    // Styles: self + inline (required for Tailwind CSS-in-JS)
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+    // Fonts
+    `font-src 'self' https://fonts.gstatic.com`,
+    // Images: self + Supabase storage + Unsplash + data URIs
+    `img-src 'self' data: blob: ${supabaseUrl} https://images.unsplash.com`,
+    // API connections: self + Supabase + Vercel analytics
+    `connect-src 'self' ${supabaseUrl} https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://${new URL(supabaseUrl || "https://placeholder.supabase.co").host}`,
+    // No iframes from external sources
+    `frame-src 'none'`,
+    // No plugins
+    `object-src 'none'`,
+    // Restrict base URI
+    `base-uri 'self'`,
+    // Only HTTPS form submissions
+    `form-action 'self'`,
+    // Upgrade all HTTP requests to HTTPS
+    `upgrade-insecure-requests`,
+    // Report violations
+    `report-uri ${siteUrl}/api/csp-report`,
+  ].join("; ");
+
+  response.headers.set("Content-Security-Policy", csp);
+
+  return response;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -39,7 +95,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return buildSecurityHeaders(NextResponse.redirect(url));
   }
 
   if (!user && request.cookies.get("df-role")) {
@@ -52,7 +108,8 @@ export async function updateSession(request: NextRequest) {
     let role: string;
 
     const roleCookieAge = request.cookies.get("df-role-ts")?.value;
-    const isFresh = roleCookieAge && Date.now() - Number(roleCookieAge) < 5 * 60 * 1000;
+    const isFresh =
+      roleCookieAge && Date.now() - Number(roleCookieAge) < 5 * 60 * 1000;
 
     if (cachedRole && isFresh) {
       role = cachedRole;
@@ -87,7 +144,7 @@ export async function updateSession(request: NextRequest) {
     if (pathname === "/login" || pathname === "/register") {
       const url = request.nextUrl.clone();
       url.pathname = dashboardPath;
-      return NextResponse.redirect(url);
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
 
     if (
@@ -97,7 +154,7 @@ export async function updateSession(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard/buyer";
-      return NextResponse.redirect(url);
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
 
     if (
@@ -107,13 +164,13 @@ export async function updateSession(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard/seller";
-      return NextResponse.redirect(url);
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
 
     if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = dashboardPath;
-      return NextResponse.redirect(url);
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
 
     if (
@@ -123,9 +180,10 @@ export async function updateSession(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone();
       url.pathname = dashboardPath;
-      return NextResponse.redirect(url);
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
   }
 
-  return supabaseResponse;
+  // Apply security headers to all passing responses
+  return buildSecurityHeaders(supabaseResponse);
 }

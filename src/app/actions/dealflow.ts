@@ -13,6 +13,8 @@ import { BUYER_TYPES } from "@/lib/contracts";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { validateDealRoomUpload, sanitizeFileName } from "@/lib/upload-validation";
 import { performNdaReview } from "@/lib/nda-review";
+import { logAuditEvent } from "@/lib/audit";
+
 
 const uuidSchema = z.string().uuid("Neispravan ID.");
 
@@ -219,6 +221,14 @@ export async function saveSellerListingAction(
   revalidatePath("/dashboard/seller");
   revalidatePath("/sell");
 
+  // Audit: new listing created
+  await logAuditEvent(supabase, {
+    action: "listing.create",
+    entityType: "listing",
+    entityId: listing.id,
+    metadata: { industry: listingPayload.industry, region: listingPayload.region },
+  });
+
   return {
     success: true,
     message: "Teaser je generiran i spreman za pregled prije objave.",
@@ -261,6 +271,14 @@ export async function publishListingAction(listingId: string): Promise<ActionRes
   }
 
   await syncMatchesForListing(supabase, listingId);
+
+  // Audit: listing published
+  await logAuditEvent(supabase, {
+    action: "listing.publish",
+    entityType: "listing",
+    entityId: listingId,
+    metadata: { public_code: listing.public_code },
+  });
 
   revalidatePath("/dashboard/seller");
   revalidatePath("/listings");
@@ -376,6 +394,14 @@ export async function requestNdaAction(listingId: string): Promise<ActionResult>
     return { error: "Slanje NDA zahtjeva nije uspjelo." };
   }
 
+  // Audit: NDA requested
+  await logAuditEvent(supabase, {
+    action: "nda.request",
+    entityType: "nda",
+    entityId: listingId,
+    metadata: { buyer_id: user.id },
+  });
+
   revalidatePath("/dashboard/buyer");
   return {
     success: true,
@@ -459,7 +485,7 @@ export async function uploadDealRoomFileAction(
     return { error: "Oglas nije pronađen." };
   }
 
-  const uploadResult = validateDealRoomUpload(formData);
+  const uploadResult = await validateDealRoomUpload(formData);
   if (!uploadResult.ok) {
     return { error: uploadResult.error };
   }
@@ -488,6 +514,14 @@ export async function uploadDealRoomFileAction(
   if (insertError) {
     return { error: "Spremanje dokumenta nije uspjelo." };
   }
+
+  // Audit: file uploaded to deal room
+  await logAuditEvent(supabase, {
+    action: "file.upload",
+    entityType: "file",
+    entityId: listingId,
+    metadata: { doc_type: docType, file_name: file.name, file_size: file.size },
+  });
 
   revalidatePath(`/dashboard/seller/deal-room/${listingId}`);
   revalidatePath(`/dashboard/buyer/deal-room/${listingId}`);

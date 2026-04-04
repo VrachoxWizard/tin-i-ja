@@ -6,11 +6,14 @@ export function validateEnv() {
   const required = [
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "GOOGLE_GENERATIVE_AI_API_KEY", // Required for AI teaser generation & valuation
+    "RESEND_API_KEY",               // Required for transactional emails
   ];
 
   const recommended = [
     "NEXT_PUBLIC_SITE_URL",
-    "GOOGLE_GENERATIVE_AI_API_KEY", // only needed for /api/valuate
+    "RESEND_FROM_EMAIL",   // Override once custom domain is verified in Resend
+    "RESEND_ADMIN_EMAIL",  // Admin inbox for contact form submissions
   ];
 
   const missingRecommended = recommended.filter((key) => !process.env[key]);
@@ -28,3 +31,4 @@ export function validateEnv() {
     );
   }
 }
+

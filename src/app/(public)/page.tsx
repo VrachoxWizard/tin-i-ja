@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { Hero3D } from "@/components/hero-3d";
 import { Magnetic } from "@/components/ui/Magnetic";
+import { AnimatedStat, TrustMarquee, StaggerGroup, StaggerItem } from "@/components/ui/LandingAnimations";
+
 
 export const metadata: Metadata = {
   title: "DealFlow | Diskretna M&A platforma za Hrvatsku",
@@ -123,7 +125,9 @@ export default async function HomePage() {
 
           </div>
         </div>
-      </section>
+        {/* ── TRUST MARQUEE TICKER ─────────────────────────────────────────── */}
+      <TrustMarquee />
+    </section>
 
       {/* ── METRICS PARALLAX BREAK ───────────────────────────────────────────── */}
       <section className="relative py-32 border-b border-border/20 overflow-hidden">
@@ -140,17 +144,9 @@ export default async function HomePage() {
 
         <div className="container relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid md:grid-cols-3 gap-16 divide-x divide-border/20">
-            {[
-              { num: "60+", label: "Ekskluzivnih Matchinga", sub: "Mjesečno" },
-              { num: "0", label: "Probijenih Identiteta", sub: "Sigurnost" },
-              { num: "AI", label: "Procjena Vrijednosti", sub: "Preciznost" }
-            ].map((stat, i) => (
-              <FadeInView key={stat.label} delay={0.1 * i} className="pl-4 md:pl-8 first:pl-0">
-                <p className="text-[0.7rem] uppercase tracking-[0.3em] font-bold text-primary shadow-sm mb-4 md:mb-6">{stat.sub}</p>
-                <p className="text-4xl md:text-5xl lg:text-7xl font-heading font-black text-transparent clip-text-gold bg-clip-text text-glow-gold tracking-tighter mb-2 md:mb-4">{stat.num}</p>
-                <p className="text-xs md:text-sm font-semibold text-foreground uppercase tracking-[0.2em]">{stat.label}</p>
-              </FadeInView>
-            ))}
+            <AnimatedStat num={60} suffix="+" label="Ekskluzivnih Matchinga" sub="Mjesečno" />
+            <AnimatedStat num={0} label="Probijenih Identiteta" sub="Sigurnost" />
+            <AnimatedStat num={"AI"} label="Procjena Vrijednosti" sub="Preciznost" />
           </div>
         </div>
       </section>

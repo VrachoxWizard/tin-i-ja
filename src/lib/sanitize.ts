@@ -2,7 +2,8 @@ import DOMPurify from "isomorphic-dompurify";
 
 /**
  * Sanitize HTML output from AI models before rendering with dangerouslySetInnerHTML.
- * Allows only safe formatting tags.
+ * Allows only safe formatting tags with NO attributes.
+ * AI-generated formatting HTML has no legitimate need for class, style, or data attributes.
  */
 export function sanitizeHtml(dirty: string): string {
   return DOMPurify.sanitize(dirty, {
@@ -14,6 +15,10 @@ export function sanitizeHtml(dirty: string): string {
       "span", "div",
       "table", "thead", "tbody", "tr", "th", "td",
     ],
-    ALLOWED_ATTR: ["class"],
+    // Strip ALL attributes — no class, style, data-*, href, or src on AI output
+    ALLOWED_ATTR: [],
+    // Extra defense: forbid any attribute that contains javascript:
+    FORBID_ATTR: ["style", "class", "id", "onclick", "onerror", "onload"],
   });
 }
+
