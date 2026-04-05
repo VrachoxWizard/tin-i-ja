@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle, Target } from "lucide-react";
 import Link from "next/link";
@@ -30,7 +33,37 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { BUYER_INDUSTRIES, REGIONS } from "@/data/constants";
 
-function ToggleChips({
+// Form Validation Schema matching backend exact specifications.
+// Wide open inputs for target bounds per user specs.
+const buyerSchema = z.object({
+  buyer_type: z.string().min(1, "Navedite tip investitora"),
+  target_ev_min: z.coerce.number().min(0, "Mora biti pozitivno"),
+  target_ev_max: z.coerce.number().min(0, "Mora biti pozitivno"),
+  target_revenue_min: z.coerce.number().min(0, "Mora biti pozitivno"),
+  target_revenue_max: z.coerce.number().min(0, "Mora biti pozitivno"),
+  target_industries: z.array(z.string()).min(1, "Odaberite barem jedan sektor"),
+  target_regions: z.array(z.string()).min(1, "Odaberite barem jednu regiju"),
+  investment_thesis: z.string().min(12, "Unesite detaljnije (barem 12 znakova)"),
+}).superRefine((data, ctx) => {
+  if (data.target_ev_max < data.target_ev_min) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["target_ev_max"],
+      message: "Max EV mora biti jednak ili veći od Min EV",
+    });
+  }
+  if (data.target_revenue_max < data.target_revenue_min) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["target_revenue_max"],
+      message: "Max prihod mora biti jednak ili veći od Min prihoda",
+    });
+  }
+});
+
+type BuyerFormValues = z.infer<typeof buyerSchema>;
+
+const ToggleChips = React.memo(function ToggleChips({
   options,
   selected,
   onChange,
@@ -39,15 +72,19 @@ function ToggleChips({
   selected: string[];
   onChange: (next: string[]) => void;
 }) {
-  function toggle(option: string) {
-    onChange(
-      selected.includes(option)
-        ? selected.filter((s) => s !== option)
-        : [...selected, option],
-    );
-  }
+  const toggle = React.useCallback(
+    (option: string) => {
+      onChange(
+        selected.includes(option)
+          ? selected.filter((s) => s !== option)
+          : [...selected, option],
+      );
+    },
+    [selected, onChange]
+  );
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Odabir opcija">
       {options.map((opt) => {
         const active = selected.includes(opt);
         return (
@@ -55,6 +92,13 @@ function ToggleChips({
             key={opt}
             type="button"
             onClick={() => toggle(opt)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggle(opt);
+              }
+            }}
+            aria-pressed={active}
             className={`px-3 py-1.5 text-xs font-medium border transition-colors rounded-none ${
               active
                 ? "bg-primary text-primary-foreground border-primary"
@@ -67,80 +111,64 @@ function ToggleChips({
       })}
     </div>
   );
-}
+});
 
 export function BuyerOnboardingForm() {
   const [step, setStep] = useState(1);
   const [result, setResult] = useState<ActionResult | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [formData, setFormData] = useState({
-    buyer_type: "",
-    target_ev_min: "",
-    target_ev_max: "",
-    target_revenue_min: "",
-    target_revenue_max: "",
-    target_industries: [] as string[],
-    target_regions: [] as string[],
-    investment_thesis: "",
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = useForm<BuyerFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(buyerSchema) as any,
+    defaultValues: {
+      buyer_type: "",
+      target_ev_min: "" as any,
+      target_ev_max: "" as any,
+      target_revenue_min: "" as any,
+      target_revenue_max: "" as any,
+      target_industries: [],
+      target_regions: [],
+      investment_thesis: "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+    mode: "onTouched",
   });
 
-  const stepValidity = useMemo(
-    () => ({
-      1:
-        !!formData.buyer_type &&
-        !!formData.target_ev_min &&
-        !!formData.target_ev_max &&
-        Number(formData.target_ev_min) <= Number(formData.target_ev_max),
-      2:
-        !!formData.target_revenue_min &&
-        !!formData.target_revenue_max &&
-        formData.target_industries.length > 0 &&
-        formData.target_regions.length > 0 &&
-        Number(formData.target_revenue_min) <=
-          Number(formData.target_revenue_max),
-      3: formData.investment_thesis.trim().length >= 12,
-    }),
-    [formData],
-  );
-
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string | null) => {
-    setFormData((prev) => ({ ...prev, [name]: value ?? "" }));
-  };
-
-  const handleNext = () => {
-    if (!stepValidity[step as keyof typeof stepValidity]) {
-      toast.error("Dovršite sva obavezna polja u ovom koraku prije nastavka.");
-      return;
+  const handleNextStep = async () => {
+    let fieldsToValidate: (keyof BuyerFormValues)[] = [];
+    if (step === 1) {
+      fieldsToValidate = ["buyer_type", "target_ev_min", "target_ev_max"];
+    } else if (step === 2) {
+      fieldsToValidate = ["target_revenue_min", "target_revenue_max", "target_industries", "target_regions"];
     }
 
-    setStep((current) => Math.min(current + 1, 3));
-  };
-
-  const handleBack = () => {
-    setStep((current) => Math.max(current - 1, 1));
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!stepValidity[3]) {
-      toast.error("Opišite svoju investicijsku tezu prije spremanja profila.");
-      return;
+    const isStepValid = await trigger(fieldsToValidate);
+    
+    if (isStepValid) {
+      setStep((curr) => Math.min(curr + 1, 3));
+    } else {
+      toast.error("Ispunite obavezna polja ispravno.");
     }
+  };
 
+  const handleBackStep = () => {
+    setStep((curr) => Math.max(curr - 1, 1));
+  };
+
+  const onSubmit = (data: BuyerFormValues) => {
     const payload = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
+    Object.entries(data).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         payload.set(key, value.join(","));
       } else {
-        payload.set(key, value);
+        payload.set(key, String(value));
       }
     });
 
@@ -154,8 +182,7 @@ export function BuyerOnboardingForm() {
       }
 
       toast.success(
-        nextResult.message ||
-          "Investicijski profil je spremljen i uparivanja su ažurirana.",
+        nextResult.message || "Investicijski profil je uspješno spremljen.",
       );
     });
   };
@@ -173,8 +200,8 @@ export function BuyerOnboardingForm() {
               Profil investitora je aktivan.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Vaši kriteriji su spremljeni i DealFlow sada može automatski
-              izračunavati podudaranja s novim aktivnim prilikama.
+              Vaši kriteriji su spremljeni i DealFlow sada automatski
+              izračunava podudaranja s novim aktivnim prilika.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -215,14 +242,14 @@ export function BuyerOnboardingForm() {
         </CardTitle>
         <CardDescription className="text-base text-muted-foreground mt-2 leading-relaxed">
           Definirajte raspon transakcije, ciljane sektore i investicijsku tezu
-          kako bi algoritam mogao filtrirati relevantne prilike.
+          kako bi algoritam filtrirao relevantne prilike.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="px-8 md:px-10 pb-6 relative z-10">
-        <form id="buyer-onboarding-form" onSubmit={handleSubmit}>
+      <CardContent className="px-8 md:px-10 pb-6 relative z-10 pt-8">
+        <form id="buyer-onboarding-form" onSubmit={handleSubmit(onSubmit)}>
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {step === 1 && (
               <motion.div
                 key="buyer-step-1"
                 initial={{ opacity: 0, x: 40 }}
@@ -233,65 +260,56 @@ export function BuyerOnboardingForm() {
               >
                 <div className="space-y-3">
                   <Label>Tip investitora</Label>
-                  <Select
-                    value={formData.buyer_type}
-                    onValueChange={(value) =>
-                      handleSelectChange("buyer_type", value)
-                    }
-                  >
-                    <SelectTrigger className="h-12 rounded-none">
-                      <SelectValue placeholder="Odaberite profil investitora" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-none">
-                      <SelectItem value="individual">
-                        Fizička osoba / poduzetnik
-                      </SelectItem>
-                      <SelectItem value="strategic">
-                        Strateški investitor
-                      </SelectItem>
-                      <SelectItem value="financial">
-                        Financijski investitor
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="buyer_type"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className={`h-12 rounded-none ${errors.buyer_type ? "border-destructive" : ""}`}>
+                          <SelectValue placeholder="Odaberite profil investitora" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-none">
+                          <SelectItem value="individual">Fizička osoba / poduzetnik</SelectItem>
+                          <SelectItem value="strategic">Strateški investitor</SelectItem>
+                          <SelectItem value="financial">Financijski investitor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.buyer_type && <p className="text-xs text-destructive">{errors.buyer_type.message}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
                     <Label htmlFor="target_ev_min">Minimalni EV (EUR)</Label>
                     <Input
-                      id="target_ev_min"
-                      name="target_ev_min"
+                      {...register("target_ev_min")}
                       type="number"
-                      value={formData.target_ev_min}
-                      onChange={handleChange}
-                      placeholder="150000"
-                      className="h-12 rounded-none"
+                      placeholder="Npr. 0 za vrlo rane"
+                      className={`h-12 rounded-none ${errors.target_ev_min ? "border-destructive" : ""}`}
                     />
+                    {errors.target_ev_min && <p className="text-xs text-destructive">{errors.target_ev_min.message}</p>}
                   </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="target_ev_max">Maksimalni EV (EUR)</Label>
                     <Input
-                      id="target_ev_max"
-                      name="target_ev_max"
+                      {...register("target_ev_max")}
                       type="number"
-                      value={formData.target_ev_max}
-                      onChange={handleChange}
-                      placeholder="2500000"
-                      className="h-12 rounded-none"
+                      placeholder="Bez ograničenja"
+                      className={`h-12 rounded-none ${errors.target_ev_max ? "border-destructive" : ""}`}
                     />
+                    {errors.target_ev_max && <p className="text-xs text-destructive">{errors.target_ev_max.message}</p>}
                   </div>
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  EV raspon koristimo kao najvažniji signal za algoritamsko
-                  uparivanje s aktivnim oglasima.
+                  EV raspon koristimo kao najvažniji signal za algoritamsko uparivanje. Ostavite 0 ukoliko su vam kriteriji otvoreni.
                 </p>
               </motion.div>
-            ) : null}
+            )}
 
-            {step === 2 ? (
+            {step === 2 && (
               <motion.div
                 key="buyer-step-2"
                 initial={{ opacity: 0, x: 40 }}
@@ -302,77 +320,69 @@ export function BuyerOnboardingForm() {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
-                    <Label htmlFor="target_revenue_min">
-                      Minimalni prihod (EUR)
-                    </Label>
+                    <Label htmlFor="target_revenue_min">Minimalni prihod (EUR)</Label>
                     <Input
-                      id="target_revenue_min"
-                      name="target_revenue_min"
+                      {...register("target_revenue_min")}
                       type="number"
-                      value={formData.target_revenue_min}
-                      onChange={handleChange}
-                      placeholder="300000"
-                      className="h-12 rounded-none"
+                      placeholder="0"
+                      className={`h-12 rounded-none ${errors.target_revenue_min ? "border-destructive" : ""}`}
                     />
+                    {errors.target_revenue_min && <p className="text-xs text-destructive">{errors.target_revenue_min.message}</p>}
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="target_revenue_max">
-                      Maksimalni prihod (EUR)
-                    </Label>
+                    <Label htmlFor="target_revenue_max">Maksimalni prihod (EUR)</Label>
                     <Input
-                      id="target_revenue_max"
-                      name="target_revenue_max"
+                      {...register("target_revenue_max")}
                       type="number"
-                      value={formData.target_revenue_max}
-                      onChange={handleChange}
-                      placeholder="5000000"
-                      className="h-12 rounded-none"
+                      placeholder="10000000"
+                      className={`h-12 rounded-none ${errors.target_revenue_max ? "border-destructive" : ""}`}
                     />
+                    {errors.target_revenue_max && <p className="text-xs text-destructive">{errors.target_revenue_max.message}</p>}
                   </div>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-5 border border-border p-5">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label>Sektori interesa</Label>
-                      <span className="text-xs text-muted-foreground">
-                        {formData.target_industries.length > 0
-                          ? `${formData.target_industries.length} odabrano`
-                          : "Odaberite jedan ili više"}
-                      </span>
                     </div>
-                    <ToggleChips
-                      options={BUYER_INDUSTRIES}
-                      selected={formData.target_industries}
-                      onChange={(next) =>
-                        setFormData((prev) => ({ ...prev, target_industries: next }))
-                      }
+                    <Controller
+                      name="target_industries"
+                      control={control}
+                      render={({ field }) => (
+                        <ToggleChips
+                          options={BUYER_INDUSTRIES}
+                          selected={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
+                    {errors.target_industries && <p className="text-xs text-destructive">{errors.target_industries.message}</p>}
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 pt-4 border-t border-border">
                     <div className="flex items-center justify-between">
                       <Label>Regije interesa</Label>
-                      <span className="text-xs text-muted-foreground">
-                        {formData.target_regions.length > 0
-                          ? `${formData.target_regions.length} odabrano`
-                          : "Odaberite jednu ili više"}
-                      </span>
                     </div>
-                    <ToggleChips
-                      options={REGIONS}
-                      selected={formData.target_regions}
-                      onChange={(next) =>
-                        setFormData((prev) => ({ ...prev, target_regions: next }))
-                      }
+                    <Controller
+                      name="target_regions"
+                      control={control}
+                      render={({ field }) => (
+                        <ToggleChips
+                          options={REGIONS}
+                          selected={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
+                    {errors.target_regions && <p className="text-xs text-destructive">{errors.target_regions.message}</p>}
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            )}
 
-            {step === 3 ? (
+            {step === 3 && (
               <motion.div
                 key="buyer-step-3"
                 initial={{ opacity: 0, x: 40 }}
@@ -382,32 +392,30 @@ export function BuyerOnboardingForm() {
                 className="space-y-6"
               >
                 <div className="space-y-3">
-                  <Label htmlFor="investment_thesis">
-                    Investicijska teza i motivacija
-                  </Label>
+                  <Label htmlFor="investment_thesis">Investicijska teza i motivacija</Label>
                   <Textarea
-                    id="investment_thesis"
-                    name="investment_thesis"
-                    value={formData.investment_thesis}
-                    onChange={handleChange}
+                    {...register("investment_thesis")}
                     rows={5}
-                    className="resize-none rounded-none"
-                    placeholder="Objasnite koje sinergije, tržišta ili operativne ciljeve želite postići ovom akvizicijom."
+                    className={`resize-none rounded-none ${errors.investment_thesis ? "border-destructive" : ""}`}
+                    placeholder="Objasnite koje sinergije, tržišta ili operativne ciljeve želite postići akvizicijom."
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Ovaj sažetak vide prodavatelji kada procjenjuju NDA zahtjev.
-                  </p>
+                  {errors.investment_thesis ? (
+                    <p className="text-xs text-destructive">{errors.investment_thesis.message}</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Ovaj sažetak vide prodavatelji kada procjenjuju vaš NDA zahtjev.</p>
+                  )}
                 </div>
               </motion.div>
-            ) : null}
+            )}
           </AnimatePresence>
         </form>
       </CardContent>
 
       <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-border pt-8 px-8 md:px-10 pb-10">
         <Button
+          type="button"
           variant="outline"
-          onClick={handleBack}
+          onClick={handleBackStep}
           disabled={step === 1 || isPending}
           className="w-full sm:w-auto rounded-none"
         >
@@ -417,7 +425,8 @@ export function BuyerOnboardingForm() {
 
         {step < 3 ? (
           <Button
-            onClick={handleNext}
+            type="button"
+            onClick={handleNextStep}
             className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90"
           >
             Sljedeći korak
@@ -426,11 +435,8 @@ export function BuyerOnboardingForm() {
         ) : (
           <Button
             onClick={() => {
-              (
-                document.getElementById(
-                  "buyer-onboarding-form",
-                ) as HTMLFormElement | null
-              )?.requestSubmit();
+              const form = document.getElementById("buyer-onboarding-form") as HTMLFormElement;
+              if (form) form.requestSubmit();
             }}
             disabled={isPending}
             className="w-full sm:w-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90"

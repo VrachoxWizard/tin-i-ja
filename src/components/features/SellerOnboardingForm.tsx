@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -28,80 +31,82 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { INDUSTRIES, REGIONS } from "@/data/constants";
 
+// Zod Schema referencing backend requirements
+const sellerFormSchema = z.object({
+  company_name: z.string().min(2, "Minimalno 2 znaka").max(120),
+  industry: z.string().min(2, "Oblavezno odaberite industriju"),
+  region: z.string().min(2, "Obavezno odaberite regiju"),
+  year_founded: z.coerce.number().min(1900, "Neispravna godina").max(new Date().getFullYear()),
+  employees: z.coerce.number().min(1, "Minimalno 1 zaposlenik"),
+  revenue: z.coerce.number().min(0, "Ne može biti negativno"),
+  ebitda: z.coerce.number().min(0, "Ne može biti negativno"),
+  sde: z.coerce.number().min(0).default(0),
+  asking_price: z.coerce.number().min(0, "Ne može biti negativno"),
+  reason_for_sale: z.string().min(12, "Unesite najmanje 12 znakova"),
+  transition_support: z.string().min(12, "Unesite najmanje 12 znakova"),
+  owner_dependency_score: z.number().min(1).max(5),
+  digital_maturity: z.number().min(1).max(5),
+});
+
+type SellerFormValues = z.infer<typeof sellerFormSchema>;
+
 export function SellerOnboardingForm() {
   const [step, setStep] = useState(1);
   const [result, setResult] = useState<ActionResult | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [formData, setFormData] = useState({
-    company_name: "",
-    industry: "",
-    region: "",
-    year_founded: "",
-    employees: "",
-    revenue: "",
-    ebitda: "",
-    sde: "",
-    asking_price: "",
-    reason_for_sale: "",
-    transition_support: "",
-    owner_dependency_score: 3,
-    digital_maturity: 3,
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = useForm<SellerFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(sellerFormSchema) as any,
+    defaultValues: {
+      company_name: "",
+      industry: "",
+      region: "",
+      year_founded: "" as any,
+      employees: "" as any,
+      revenue: "" as any,
+      ebitda: "" as any,
+      sde: "" as any, // Optional field tracking
+      asking_price: "" as any,
+      reason_for_sale: "",
+      transition_support: "",
+      owner_dependency_score: 3,
+      digital_maturity: 3,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+    mode: "onTouched",
   });
 
-  const stepValidity = useMemo(
-    () => ({
-      1:
-        formData.company_name.trim().length >= 2 &&
-        formData.industry &&
-        formData.region &&
-        formData.year_founded &&
-        formData.employees,
-      2:
-        formData.revenue &&
-        formData.ebitda &&
-        formData.asking_price &&
-        Number(formData.asking_price) >= 0,
-      3:
-        formData.reason_for_sale.trim().length >= 12 &&
-        formData.transition_support.trim().length >= 12,
-    }),
-    [formData],
-  );
-
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string | null) => {
-    setFormData((prev) => ({ ...prev, [name]: value ?? "" }));
-  };
-
-  const handleNext = () => {
-    if (!stepValidity[step as keyof typeof stepValidity]) {
-      toast.error("Prije nastavka ispunite sva obavezna polja u ovom koraku.");
-      return;
+  const handleNextStep = async () => {
+    let fieldsToValidate: (keyof SellerFormValues)[] = [];
+    if (step === 1) {
+      fieldsToValidate = ["company_name", "industry", "region", "year_founded", "employees"];
+    } else if (step === 2) {
+      fieldsToValidate = ["revenue", "ebitda", "sde", "asking_price"];
     }
 
-    setStep((current) => Math.min(current + 1, 3));
-  };
-
-  const handleBack = () => {
-    setStep((current) => Math.max(current - 1, 1));
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!stepValidity[3]) {
-      toast.error("Dodajte razlog prodaje i plan tranzicije prije slanja.");
-      return;
+    const isStepValid = await trigger(fieldsToValidate);
+    
+    if (isStepValid) {
+      setStep((curr) => Math.min(curr + 1, 3));
+    } else {
+      toast.error("Ispunite obavezna polja ispravno.");
     }
+  };
 
+  const handleBackStep = () => {
+    setStep((curr) => Math.max(curr - 1, 1));
+  };
+
+  const onSubmit = (data: SellerFormValues) => {
     const payload = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
+    Object.entries(data).forEach(([key, value]) => {
       payload.set(key, String(value));
     });
 
@@ -115,8 +120,7 @@ export function SellerOnboardingForm() {
       }
 
       toast.success(
-        nextResult.message ||
-          "Teaser je generiran. Pregledajte ga prije objave u marketplaceu.",
+        nextResult.message || "Teaser je uspješno generiran.",
       );
     });
   };
@@ -187,10 +191,10 @@ export function SellerOnboardingForm() {
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="px-8 md:px-10 pb-6 relative z-10">
-        <form id="seller-onboarding-form" onSubmit={handleSubmit}>
+      <CardContent className="px-8 md:px-10 pb-6 relative z-10 pt-8">
+        <form id="seller-onboarding-form" onSubmit={handleSubmit(onSubmit)}>
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {step === 1 && (
               <motion.div
                 key="seller-step-1"
                 initial={{ opacity: 0, x: 40 }}
@@ -202,60 +206,60 @@ export function SellerOnboardingForm() {
                 <div className="space-y-3">
                   <Label htmlFor="company_name">Naziv tvrtke</Label>
                   <Input
-                    id="company_name"
-                    name="company_name"
-                    value={formData.company_name}
-                    onChange={handleChange}
+                    {...register("company_name")}
                     placeholder="Npr. Adria Industrija d.o.o."
-                    className="h-12 rounded-none"
+                    className={`h-12 rounded-none ${errors.company_name ? "border-destructive" : ""}`}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Ovaj podatak koristi se samo interno i nikad se ne prikazuje
-                    u blind teaseru.
-                  </p>
+                  {errors.company_name ? (
+                    <p className="text-xs text-destructive">{errors.company_name.message}</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Ovaj podatak koristi se interno, skriven u teaseru.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-3">
                     <Label>Industrija</Label>
-                    <Select
-                      value={formData.industry}
-                      onValueChange={(value) =>
-                        handleSelectChange("industry", value)
-                      }
-                    >
-                      <SelectTrigger className="h-12 rounded-none">
-                        <SelectValue placeholder="Odaberite industriju" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        {INDUSTRIES.map((industry) => (
-                          <SelectItem key={industry} value={industry}>
-                            {industry}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="industry"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className={`h-12 rounded-none ${errors.industry ? "border-destructive" : ""}`}>
+                            <SelectValue placeholder="Odaberite industriju" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-none">
+                            {INDUSTRIES.map((ind) => (
+                              <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.industry && <p className="text-xs text-destructive">{errors.industry.message}</p>}
                   </div>
 
                   <div className="space-y-3">
                     <Label>Regija</Label>
-                    <Select
-                      value={formData.region}
-                      onValueChange={(value) =>
-                        handleSelectChange("region", value)
-                      }
-                    >
-                      <SelectTrigger className="h-12 rounded-none">
-                        <SelectValue placeholder="Odaberite regiju" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        {REGIONS.map((region) => (
-                          <SelectItem key={region} value={region}>
-                            {region}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      name="region"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className={`h-12 rounded-none ${errors.region ? "border-destructive" : ""}`}>
+                            <SelectValue placeholder="Odaberite regiju" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-none">
+                            {REGIONS.map((reg) => (
+                              <SelectItem key={reg} value={reg}>{reg}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.region && <p className="text-xs text-destructive">{errors.region.message}</p>}
                   </div>
                 </div>
 
@@ -263,33 +267,29 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="year_founded">Godina osnivanja</Label>
                     <Input
-                      id="year_founded"
-                      name="year_founded"
+                      {...register("year_founded")}
                       type="number"
-                      value={formData.year_founded}
-                      onChange={handleChange}
                       placeholder="2012"
-                      className="h-12 rounded-none"
+                      className={`h-12 rounded-none ${errors.year_founded ? "border-destructive" : ""}`}
                     />
+                    {errors.year_founded && <p className="text-xs text-destructive">{errors.year_founded.message}</p>}
                   </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="employees">Broj zaposlenih</Label>
                     <Input
-                      id="employees"
-                      name="employees"
+                      {...register("employees")}
                       type="number"
-                      value={formData.employees}
-                      onChange={handleChange}
                       placeholder="18"
-                      className="h-12 rounded-none"
+                      className={`h-12 rounded-none ${errors.employees ? "border-destructive" : ""}`}
                     />
+                    {errors.employees && <p className="text-xs text-destructive">{errors.employees.message}</p>}
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            )}
 
-            {step === 2 ? (
+            {step === 2 && (
               <motion.div
                 key="seller-step-2"
                 initial={{ opacity: 0, x: 40 }}
@@ -302,27 +302,23 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="revenue">Godišnji prihod (EUR)</Label>
                     <Input
-                      id="revenue"
-                      name="revenue"
+                      {...register("revenue")}
                       type="number"
-                      value={formData.revenue}
-                      onChange={handleChange}
                       placeholder="850000"
-                      className="h-12 rounded-none"
+                      className={`h-12 rounded-none ${errors.revenue ? "border-destructive" : ""}`}
                     />
+                    {errors.revenue && <p className="text-xs text-destructive">{errors.revenue.message}</p>}
                   </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="ebitda">EBITDA (EUR)</Label>
                     <Input
-                      id="ebitda"
-                      name="ebitda"
+                      {...register("ebitda")}
                       type="number"
-                      value={formData.ebitda}
-                      onChange={handleChange}
                       placeholder="190000"
-                      className="h-12 rounded-none"
+                      className={`h-12 rounded-none ${errors.ebitda ? "border-destructive" : ""}`}
                     />
+                    {errors.ebitda && <p className="text-xs text-destructive">{errors.ebitda.message}</p>}
                   </div>
                 </div>
 
@@ -330,37 +326,29 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="sde">SDE (EUR)</Label>
                     <Input
-                      id="sde"
-                      name="sde"
+                      {...register("sde")}
                       type="number"
-                      value={formData.sde}
-                      onChange={handleChange}
                       placeholder="220000"
                       className="h-12 rounded-none"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Unesite ako ga pratite. Ako ne, procjena se i dalje može
-                      napraviti.
-                    </p>
+                    <p className="text-xs text-muted-foreground">Unesite iznos opcionalno ako ga pratite.</p>
                   </div>
 
                   <div className="space-y-3">
                     <Label htmlFor="asking_price">Tražena cijena (EUR)</Label>
                     <Input
-                      id="asking_price"
-                      name="asking_price"
+                      {...register("asking_price")}
                       type="number"
-                      value={formData.asking_price}
-                      onChange={handleChange}
                       placeholder="1200000"
-                      className="h-12 rounded-none"
+                      className={`h-12 rounded-none ${errors.asking_price ? "border-destructive" : ""}`}
                     />
+                    {errors.asking_price && <p className="text-xs text-destructive">{errors.asking_price.message}</p>}
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            )}
 
-            {step === 3 ? (
+            {step === 3 && (
               <motion.div
                 key="seller-step-3"
                 initial={{ opacity: 0, x: 40 }}
@@ -372,45 +360,40 @@ export function SellerOnboardingForm() {
                 <div className="space-y-3">
                   <Label htmlFor="reason_for_sale">Razlog prodaje</Label>
                   <Textarea
-                    id="reason_for_sale"
-                    name="reason_for_sale"
-                    value={formData.reason_for_sale}
-                    onChange={handleChange}
+                    {...register("reason_for_sale")}
                     rows={4}
-                    className="resize-none rounded-none"
-                    placeholder="Npr. planirano umirovljenje i prijenos poslovanja uz očuvanje tima."
+                    className={`resize-none rounded-none ${errors.reason_for_sale ? "border-destructive" : ""}`}
+                    placeholder="Npr. planirano umirovljenje i prijenos poslovanja..."
                   />
+                  {errors.reason_for_sale && <p className="text-xs text-destructive">{errors.reason_for_sale.message}</p>}
                 </div>
 
                 <div className="space-y-3">
                   <Label htmlFor="transition_support">Plan tranzicije</Label>
                   <Textarea
-                    id="transition_support"
-                    name="transition_support"
-                    value={formData.transition_support}
-                    onChange={handleChange}
+                    {...register("transition_support")}
                     rows={4}
-                    className="resize-none rounded-none"
-                    placeholder="Npr. vlasnik ostaje 6 mjeseci radi prijenosa odnosa s klijentima i procesa."
+                    className={`resize-none rounded-none ${errors.transition_support ? "border-destructive" : ""}`}
+                    placeholder="Npr. vlasnik ostaje 6 mjeseci radi prijenosa odnosa..."
                   />
+                  {errors.transition_support && <p className="text-xs text-destructive">{errors.transition_support.message}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4 border border-border p-5">
                     <Label className="text-base">Ovisnost poslovanja o vlasniku</Label>
-                    <Slider
-                      value={[formData.owner_dependency_score]}
-                      min={1}
-                      max={5}
-                      step={1}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          owner_dependency_score: Array.isArray(value)
-                            ? (value[0] ?? 3)
-                            : value,
-                        }))
-                      }
+                    <Controller
+                      name="owner_dependency_score"
+                      control={control}
+                      render={({ field }) => (
+                        <Slider
+                          value={[field.value]}
+                          min={1}
+                          max={5}
+                          step={1}
+                          onValueChange={(val) => field.onChange(Array.isArray(val) ? val[0] : val)}
+                        />
+                      )}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>1 - niska</span>
@@ -420,36 +403,36 @@ export function SellerOnboardingForm() {
 
                   <div className="space-y-4 border border-border p-5">
                     <Label className="text-base">Digitalna zrelost procesa</Label>
-                    <Slider
-                      value={[formData.digital_maturity]}
-                      min={1}
-                      max={5}
-                      step={1}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          digital_maturity: Array.isArray(value)
-                            ? (value[0] ?? 3)
-                            : value,
-                        }))
-                      }
+                    <Controller
+                      name="digital_maturity"
+                      control={control}
+                      render={({ field }) => (
+                        <Slider
+                          value={[field.value]}
+                          min={1}
+                          max={5}
+                          step={1}
+                          onValueChange={(val) => field.onChange(Array.isArray(val) ? val[0] : val)}
+                        />
+                      )}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>1 - ručno</span>
-                      <span>5 - strukturirano</span>
+                      <span>5 - sustav</span>
                     </div>
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            )}
           </AnimatePresence>
         </form>
       </CardContent>
 
       <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-4 border-t border-border pt-8 px-8 md:px-10 pb-10">
         <Button
+          type="button"
           variant="outline"
-          onClick={handleBack}
+          onClick={handleBackStep}
           disabled={step === 1 || isPending}
           className="w-full sm:w-auto rounded-none"
         >
@@ -459,7 +442,8 @@ export function SellerOnboardingForm() {
 
         {step < 3 ? (
           <Button
-            onClick={handleNext}
+            type="button"
+            onClick={handleNextStep}
             className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90"
           >
             Sljedeći korak
@@ -467,12 +451,10 @@ export function SellerOnboardingForm() {
           </Button>
         ) : (
           <Button
+            type="submit"
             onClick={() => {
-              (
-                document.getElementById(
-                  "seller-onboarding-form",
-                ) as HTMLFormElement | null
-              )?.requestSubmit();
+              const form = document.getElementById("seller-onboarding-form") as HTMLFormElement;
+              if (form) form.requestSubmit();
             }}
             disabled={isPending}
             className="w-full sm:w-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90"

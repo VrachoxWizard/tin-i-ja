@@ -12,9 +12,9 @@ import { createClient } from "@/lib/supabase/server";
 import { TeaserCard } from "@/components/features/TeaserCard";
 import { Button } from "@/components/ui/button";
 import { FadeInView } from "@/components/ui/FadeInView";
-import { Hero3D } from "@/components/hero-3d";
+import { HeroCinematic } from "@/components/hero-cinematic";
 import { Magnetic } from "@/components/ui/Magnetic";
-import { AnimatedStat, TrustMarquee, StaggerGroup, StaggerItem } from "@/components/ui/LandingAnimations";
+import { AnimatedStat, TrustMarquee } from "@/components/ui/LandingAnimations";
 
 
 export const metadata: Metadata = {
@@ -54,8 +54,8 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-background relative">
 
       {/* ── AVANT-GARDE HERO ───────────────────────────────────────────────────── */}
-      <section className="relative min-h-[100vh] flex items-center border-b border-border/20 pt-20">
-        <Hero3D />
+      <section className="relative min-h-[100vh] flex flex-col justify-center border-b border-border/20 pt-20 pb-16">
+        <HeroCinematic />
 
         {/* Abstract large typography background element */}
         <div className="absolute top-1/4 left-[-5%] text-[15vw] font-heading font-black text-foreground/5 whitespace-nowrap pointer-events-none select-none overflow-hidden z-[1] tracking-tighter mix-blend-overlay">
@@ -74,10 +74,10 @@ export default async function HomePage() {
               </FadeInView>
 
               <FadeInView delay={0.1}>
-                <h1 className="font-heading font-black leading-[0.9] tracking-tighter text-foreground uppercase">
-                  <span className="block text-[clamp(2.5rem,9vw,6.5rem)] ml-[-2px] md:ml-[-4px]">Diskretan</span>
-                  <span className="block text-[clamp(2.5rem,9vw,6.5rem)] ml-[-2px] md:ml-[-4px] text-transparent clip-text-gold bg-clip-text text-glow-gold relative z-10">Prijenos</span>
-                  <span className="block text-[clamp(2.5rem,9vw,6.5rem)] ml-[-2px] md:ml-[-4px]">Vlasništva.</span>
+                <h1 className="font-heading font-black leading-none tracking-tighter text-foreground uppercase">
+                  <span className="block text-[clamp(2.5rem,8.5vw,6rem)]">Diskretan</span>
+                  <span className="block text-[clamp(2.5rem,8.5vw,6rem)] text-transparent clip-text-gold bg-clip-text text-glow-gold relative z-10 py-1">Prijenos</span>
+                  <span className="block text-[clamp(2.5rem,8.5vw,6rem)]">Vlasništva.</span>
                 </h1>
               </FadeInView>
 
@@ -104,7 +104,7 @@ export default async function HomePage() {
             {/* Asymmetrical Framed Image Right */}
             <FadeInView delay={0.4} yOffset={50}>
               <div className="relative group">
-                <div className="relative z-10 aspect-[3/4] max-h-[70vh] border border-primary/20 bg-card-elevated p-4 shadow-glass-elevated transition-transform duration-700 group-hover:scale-[1.02]">
+                <div className="relative z-10 aspect-[3/4] max-h-[70vh] border border-primary/20 bg-card-elevated p-4 shadow-glow-gold transition-transform duration-700 group-hover:scale-[1.02]">
                   <Image
                     src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
                     alt="Moderni poslovni neboder — simbol korporativnog rasta i M&A transakcija"
@@ -114,7 +114,7 @@ export default async function HomePage() {
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                   <Magnetic strength={15}>
-                    <div className="absolute bottom-[-20px] left-4 md:bottom-10 md:-left-10 bg-card-elevated border border-primary/40 shadow-glow-gold p-4 md:p-6 max-w-[200px] md:max-w-[240px]">
+                    <div className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-4 bg-card border border-primary/40 shadow-glow-gold p-5 md:p-6 max-w-[200px] md:max-w-[240px] z-20">
                       <ShieldCheck className="w-6 h-6 md:w-8 md:h-8 text-primary mb-2 md:mb-4" />
                       <p className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold">100% Povjerljivo</p>
                     </div>
@@ -126,8 +126,10 @@ export default async function HomePage() {
           </div>
         </div>
         {/* ── TRUST MARQUEE TICKER ─────────────────────────────────────────── */}
-      <TrustMarquee />
-    </section>
+        <div className="absolute bottom-0 left-0 w-full z-20">
+          <TrustMarquee />
+        </div>
+      </section>
 
       {/* ── METRICS PARALLAX BREAK ───────────────────────────────────────────── */}
       <section className="relative py-32 border-b border-border/20 overflow-hidden">
