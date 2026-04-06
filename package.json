@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "supabase:types": "npx supabase gen types typescript --project-id uygdnniouyeqvmysghbu --schema public > src/lib/database.types.ts"
+    "supabase:types": "npx supabase gen types typescript --project-id uygdnniouyeqvmysghbu --schema public > src/lib/database.types.ts",
+    "analyze": "cross-env ANALYZE=true next build"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",
@@ -42,6 +43,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.2",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -49,6 +51,7 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.183.1",
     "@vitejs/plugin-react": "^6.0.1",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",

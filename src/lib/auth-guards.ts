@@ -2,12 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/lib/contracts";
+import { getDashboardPathForRole, type UserRole } from "@/lib/contracts";
 
 export interface AuthContext {
   supabase: Awaited<ReturnType<typeof createClient>>;
   user: { id: string; email?: string };
-  profile: { role: UserRole; full_name: string } | null;
+  profile: { role: UserRole; full_name: string; suspended_at: string | null } | null;
 }
 
 /**
@@ -26,9 +26,18 @@ export async function requireAuth(): Promise<AuthContext> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role, full_name")
+    .select("role, full_name, suspended_at")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (!profile) {
+    throw new Error("Unauthorized");
+  }
+
+  if (profile.suspended_at) {
+    await supabase.auth.signOut();
+    redirect("/login?error=account_suspended");
+  }
 
   return { supabase, user, profile: profile as AuthContext["profile"] };
 }
@@ -81,13 +90,19 @@ export async function requirePageRole(
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role, full_name")
+    .select("role, full_name, suspended_at")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (!profile) redirect("/login");
+  if (profile.suspended_at) {
+    await supabase.auth.signOut();
+    redirect("/login?error=account_suspended");
+  }
 
   const role = profile?.role as UserRole | undefined;
   if (!role || !allowedRoles.includes(role)) {
-    redirect(redirectTo);
+    redirect(role ? getDashboardPathForRole(role) : redirectTo);
   }
 
   return { supabase, user, profile: profile as AuthContext["profile"] };

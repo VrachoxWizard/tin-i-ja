@@ -78,11 +78,24 @@ export function NdaRequestButton({
 
   if (status === "rejected") {
     return (
-      <div aria-live="polite">
+      <div aria-live="polite" className="space-y-3">
         <Badge className="w-full justify-center py-2.5 bg-red-500/10 text-red-500 border-red-500/20 rounded-none">
           <XCircle className="w-3.5 h-3.5 mr-2" />
           NDA zahtjev odbijen
         </Badge>
+        <Button
+          onClick={handleRequest}
+          disabled={isPending}
+          variant="outline"
+          className="w-full rounded-none h-12 font-heading uppercase tracking-widest text-sm"
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : (
+            <FileSignature className="w-4 h-4 mr-2" />
+          )}
+          Pošalji novi zahtjev
+        </Button>
       </div>
     );
   }

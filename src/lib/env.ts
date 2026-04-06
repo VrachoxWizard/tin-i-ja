@@ -6,6 +6,7 @@ export function validateEnv() {
   const required = [
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
     "GOOGLE_GENERATIVE_AI_API_KEY", // Required for AI teaser generation & valuation
     "RESEND_API_KEY",               // Required for transactional emails
   ];

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
+import { getDashboardPathForRole } from "@/lib/contracts";
 
 // ── Security headers applied to every response ─────────────────────────────
 function buildSecurityHeaders(response: NextResponse): NextResponse {
@@ -25,12 +26,21 @@ function buildSecurityHeaders(response: NextResponse): NextResponse {
 
   // Content-Security-Policy — tuned for Next.js + Supabase + Vercel
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dealflow.hr";
+
+  const scriptSources = [
+    "'self'",
+    "'unsafe-inline'",
+    "https://va.vercel-scripts.com",
+    "https://vercel.live",
+  ];
+  if (process.env.NODE_ENV !== "production") {
+    scriptSources.push("'unsafe-eval'");
+  }
 
   const csp = [
     `default-src 'self'`,
-    // Scripts: self + Vercel analytics/insights (inline hashes managed by Next.js)
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live`,
+    // Scripts: self + Vercel analytics/insights
+    `script-src ${scriptSources.join(" ")}`,
     // Styles: self + inline (required for Tailwind CSS-in-JS)
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     // Fonts
@@ -41,6 +51,7 @@ function buildSecurityHeaders(response: NextResponse): NextResponse {
     `connect-src 'self' ${supabaseUrl} https://va.vercel-scripts.com https://vitals.vercel-insights.com wss://${new URL(supabaseUrl || "https://placeholder.supabase.co").host}`,
     // No iframes from external sources
     `frame-src 'none'`,
+    `frame-ancestors 'none'`,
     // No plugins
     `object-src 'none'`,
     // Restrict base URI
@@ -49,8 +60,6 @@ function buildSecurityHeaders(response: NextResponse): NextResponse {
     `form-action 'self'`,
     // Upgrade all HTTP requests to HTTPS
     `upgrade-insecure-requests`,
-    // Report violations
-    `report-uri ${siteUrl}/api/csp-report`,
   ].join("; ");
 
   response.headers.set("Content-Security-Policy", csp);
@@ -98,48 +107,24 @@ export async function updateSession(request: NextRequest) {
     return buildSecurityHeaders(NextResponse.redirect(url));
   }
 
-  if (!user && request.cookies.get("df-role")) {
-    supabaseResponse.cookies.set("df-role", "", { path: "/", maxAge: 0 });
-    supabaseResponse.cookies.set("df-role-ts", "", { path: "/", maxAge: 0 });
-  }
-
   if (user) {
-    const cachedRole = request.cookies.get("df-role")?.value;
-    let role: string;
+    const { data: profileData } = await supabase
+      .from("users")
+      .select("role, suspended_at")
+      .eq("id", user.id)
+      .maybeSingle();
 
-    const roleCookieAge = request.cookies.get("df-role-ts")?.value;
-    const isFresh =
-      roleCookieAge && Date.now() - Number(roleCookieAge) < 5 * 60 * 1000;
+    if (profileData?.suspended_at) {
+      await supabase.auth.signOut();
 
-    if (cachedRole && isFresh) {
-      role = cachedRole;
-    } else {
-      const { data: profileData } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      role = profileData?.role || "buyer";
-      const cookieOpts = {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax" as const,
-        maxAge: 5 * 60,
-      };
-      supabaseResponse.cookies.set("df-role", role, cookieOpts);
-      supabaseResponse.cookies.set("df-role-ts", String(Date.now()), cookieOpts);
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "account_suspended");
+      return buildSecurityHeaders(NextResponse.redirect(url));
     }
 
-    const dashboardPath =
-      role === "admin"
-        ? "/dashboard/admin"
-        : role === "broker"
-          ? "/dashboard/broker"
-          : role === "seller"
-            ? "/dashboard/seller"
-            : "/dashboard/buyer";
+    const role = profileData?.role ?? "buyer";
+    const dashboardPath = getDashboardPathForRole(role);
 
     if (pathname === "/login" || pathname === "/register") {
       const url = request.nextUrl.clone();
@@ -163,7 +148,7 @@ export async function updateSession(request: NextRequest) {
       role !== "admin"
     ) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard/seller";
+      url.pathname = dashboardPath;
       return buildSecurityHeaders(NextResponse.redirect(url));
     }
 

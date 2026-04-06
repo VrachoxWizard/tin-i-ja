@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getDashboardPathForRole } from "@/lib/contracts";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ export default async function AdminDashboardPage() {
     .single();
 
   if (profile?.role !== "admin") {
-    redirect("/dashboard/buyer");
+    redirect(getDashboardPathForRole(profile?.role));
   }
 
   const { data: overview, error } = await supabase.rpc("admin_overview");

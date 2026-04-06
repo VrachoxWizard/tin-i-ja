@@ -11,6 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { NdaActions } from "@/components/features/NdaActions";
 import { PublishListingButton } from "@/components/features/PublishListingButton";
@@ -64,6 +65,7 @@ function getListingBadge(status: string) {
 
 export default async function SellerDashboard() {
   const supabase = await createClient();
+  const admin = createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -110,10 +112,10 @@ export default async function SellerDashboard() {
 
   const [{ data: buyers }, { data: buyerProfiles }] = await Promise.all([
     buyerIds.length
-      ? supabase.from("users").select("id, full_name, email").in("id", buyerIds)
+      ? admin.from("users").select("id, full_name, email").in("id", buyerIds)
       : Promise.resolve({ data: [] }),
     buyerProfileIds.length
-      ? supabase
+      ? admin
           .from("buyer_profiles")
           .select("id, user_id, transaction_type, investment_thesis")
           .in("id", buyerProfileIds)

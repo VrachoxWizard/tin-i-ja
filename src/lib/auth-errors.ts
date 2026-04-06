@@ -17,6 +17,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   password_update_failed: "Ažuriranje lozinke nije uspjelo. Pokušajte ponovo.",
   signup_failed: "Registracija nije uspjela. Pokušajte ponovo.",
   invalid_email: "Unesite valjanu email adresu.",
+  account_suspended: "Račun je suspendiran. Kontaktirajte podršku za ponovno aktiviranje.",
   unknown: "Došlo je do greške. Pokušajte ponovo.",
 };
 

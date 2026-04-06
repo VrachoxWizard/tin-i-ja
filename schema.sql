@@ -190,8 +190,14 @@ alter table public.rate_limits enable row level security;
 create policy "Users can read own data" on public.users
   for select using ((select auth.uid()) = id);
 
-create policy "Users can update own data" on public.users
-  for update using ((select auth.uid()) = id);
+create policy "Admins can read all users" on public.users
+  for select using (
+    exists (
+      select 1
+      from public.users
+      where id = (select auth.uid()) and role = 'admin'
+    )
+  );
 
 -- ─── listings ─────────────────────────────────────────────────────────────────
 -- Single SELECT policy covering all access patterns (optimized: no per-row auth.uid() re-eval)
@@ -212,19 +218,9 @@ create policy "listings_select_policy" on public.listings
     )
   );
 
-create policy "Sellers can insert own listings" on public.listings
-  for insert with check (owner_id = (select auth.uid()));
-
-create policy "Sellers can update own listings" on public.listings
-  for update using (owner_id = (select auth.uid()));
-
-create policy "Sellers can delete own listings" on public.listings
-  for delete using (owner_id = (select auth.uid()));
-
 -- ─── buyer_profiles ────────────────────────────────────────────────────────────
-create policy "Buyers can manage own profile" on public.buyer_profiles
-  for all using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
+create policy "Buyers can read own profile" on public.buyer_profiles
+  for select using ((select auth.uid()) = user_id);
 
 -- ─── ndas ──────────────────────────────────────────────────────────────────────
 -- Single SELECT policy covering buyer, seller, broker, and admin access
@@ -239,19 +235,6 @@ create policy "ndas_select_policy" on public.ndas
     )
     or exists (
       select 1 from public.users where id = (select auth.uid()) and role = 'admin'
-    )
-  );
-
-create policy "Buyers can request ndas" on public.ndas
-  for insert with check (buyer_id = (select auth.uid()) and status = 'pending');
-
-create policy "Sellers can update ndas for own listings" on public.ndas
-  for update using (
-    exists (
-      select 1
-      from public.listings
-      where listings.id = ndas.listing_id
-        and listings.owner_id = (select auth.uid())
     )
   );
 
@@ -274,20 +257,6 @@ create policy "deal_room_files_select_policy" on public.deal_room_files
     )
   );
 
-create policy "Sellers can insert own deal room files" on public.deal_room_files
-  for insert with check (
-    listing_id in (
-      select id from public.listings where owner_id = (select auth.uid())
-    )
-  );
-
-create policy "Sellers can delete own deal room files" on public.deal_room_files
-  for delete using (
-    listing_id in (
-      select id from public.listings where owner_id = (select auth.uid())
-    )
-  );
-
 -- ─── matches ───────────────────────────────────────────────────────────────────
 -- Single SELECT policy covering buyer profile owner, listing seller, and admin
 create policy "matches_select_policy" on public.matches
@@ -300,47 +269,6 @@ create policy "matches_select_policy" on public.matches
     )
     or exists (
       select 1 from public.users where id = (select auth.uid()) and role = 'admin'
-    )
-  );
-
--- matches are written only by security-definer functions (syncMatchesForListing / syncMatchesForBuyerProfile)
--- These policies allow the functions to upsert/delete without requiring caller-level RLS bypass.
-create policy "Service role can insert matches" on public.matches
-  for insert with check (
-    exists (
-      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
-    )
-    or listing_id in (
-      select id from public.listings where owner_id = (select auth.uid())
-    )
-    or buyer_profile_id in (
-      select id from public.buyer_profiles where user_id = (select auth.uid())
-    )
-  );
-
-create policy "Service role can update matches" on public.matches
-  for update using (
-    exists (
-      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
-    )
-    or listing_id in (
-      select id from public.listings where owner_id = (select auth.uid())
-    )
-    or buyer_profile_id in (
-      select id from public.buyer_profiles where user_id = (select auth.uid())
-    )
-  );
-
-create policy "Service role can delete matches" on public.matches
-  for delete using (
-    exists (
-      select 1 from public.users where id = (select auth.uid()) and role = 'admin'
-    )
-    or listing_id in (
-      select id from public.listings where owner_id = (select auth.uid())
-    )
-    or buyer_profile_id in (
-      select id from public.buyer_profiles where user_id = (select auth.uid())
     )
   );
 
@@ -368,51 +296,6 @@ on conflict (id) do update
 set name = excluded.name,
     public = excluded.public;
 
-create policy "Sellers can upload deal room storage objects" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.owner_id = (select auth.uid())
-    )
-  );
-
-create policy "Sellers can update deal room storage objects" on storage.objects
-  for update to authenticated
-  using (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.owner_id = (select auth.uid())
-    )
-  )
-  with check (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.owner_id = (select auth.uid())
-    )
-  );
-
-create policy "Sellers can delete deal room storage objects" on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.owner_id = (select auth.uid())
-    )
-  );
-
 create policy "Authorized users can read deal room storage objects" on storage.objects
   for select to authenticated
   using (
@@ -437,51 +320,6 @@ create policy "Authorized users can read deal room storage objects" on storage.o
           and ndas.buyer_id = (select auth.uid())
           and ndas.status = 'signed'
       )
-    )
-  );
-
-create policy "Brokers can upload deal room storage objects" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.broker_id = (select auth.uid())
-    )
-  );
-
-create policy "Brokers can update deal room storage objects" on storage.objects
-  for update to authenticated
-  using (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.broker_id = (select auth.uid())
-    )
-  )
-  with check (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.broker_id = (select auth.uid())
-    )
-  );
-
-create policy "Brokers can delete deal room storage objects" on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'deal-room-files'
-    and exists (
-      select 1
-      from public.listings
-      where listings.id::text = (storage.foldername(name))[1]
-        and listings.broker_id = (select auth.uid())
     )
   );
 
@@ -557,11 +395,18 @@ $$;
 
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  requested_role text;
 begin
+  requested_role := lower(coalesce(new.raw_user_meta_data->>'role', 'buyer'));
+
   insert into public.users (id, role, full_name, email)
   values (
     new.id,
-    coalesce((new.raw_user_meta_data->>'role'), 'buyer'),
+    case
+      when requested_role in ('buyer', 'seller') then requested_role
+      else 'buyer'
+    end,
     coalesce((new.raw_user_meta_data->>'full_name'), ''),
     new.email
   );
@@ -572,6 +417,52 @@ $$ language plpgsql security definer set search_path = public;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+create or replace function public.update_own_profile(
+  p_full_name text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  update public.users
+  set full_name = left(trim(coalesce(p_full_name, '')), 120)
+  where id = auth.uid();
+end;
+$$;
+
+create or replace function public.refresh_listing_status_from_ndas(
+  p_listing_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.listings
+  set
+    status = case
+      when exists (
+        select 1
+        from public.ndas
+        where listing_id = p_listing_id
+          and status = 'signed'
+      ) then 'under_nda'
+      when status = 'under_nda' then 'active'
+      else status
+    end,
+    updated_at = now()
+  where id = p_listing_id
+    and status <> 'closed';
+end;
+$$;
 
 create or replace function public.admin_overview()
 returns json
@@ -642,14 +533,7 @@ create policy "Users can view their own notifications" on public.notifications
 
 create policy "Users can mark their own notifications as read" on public.notifications
   for update using (user_id = (select auth.uid()))
-  with check (user_id = (select auth.uid()));
-
-create policy "Service role inserts notifications" on public.notifications
-  for insert with check (
-    exists (
-      select 1 from public.users where id = (select auth.uid()) and role in ('admin', 'broker', 'seller')
-    )
-  );
+  with check (user_id = (select auth.uid()) and read_at is not null);
 
 -- Helper to create a notification for a user (called from server actions)
 create or replace function public.create_notification(
@@ -665,6 +549,10 @@ security definer
 set search_path = public
 as $$
 begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Forbidden';
+  end if;
+
   insert into public.notifications (user_id, type, title, body, entity_id)
   values (p_user_id, p_type, p_title, p_body, p_entity_id);
 end;
@@ -749,6 +637,18 @@ begin
     raise exception 'Forbidden';
   end if;
 
+  update public.listings
+  set broker_id = null
+  where broker_id = p_user_id;
+
+  delete from storage.objects
+  where bucket_id = 'deal-room-files'
+    and (storage.foldername(name))[1] in (
+      select id::text
+      from public.listings
+      where owner_id = p_user_id
+    );
+
   -- Delete dependent records first
   delete from public.matches
   where listing_id in (select id from public.listings where owner_id = p_user_id)
@@ -761,6 +661,8 @@ begin
   delete from public.deal_room_files
   where listing_id in (select id from public.listings where owner_id = p_user_id);
 
+  delete from public.notifications where user_id = p_user_id;
+  delete from public.audit_logs where actor_id = p_user_id;
   delete from public.listings where owner_id = p_user_id;
   delete from public.buyer_profiles where user_id = p_user_id;
   delete from public.users where id = p_user_id;
@@ -805,6 +707,10 @@ begin
     raise exception 'Forbidden';
   end if;
 
+  delete from storage.objects
+  where bucket_id = 'deal-room-files'
+    and (storage.foldername(name))[1] = p_listing_id::text;
+
   delete from public.matches where listing_id = p_listing_id;
   delete from public.deal_room_files where listing_id = p_listing_id;
   delete from public.ndas where listing_id = p_listing_id;
@@ -822,10 +728,17 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  target_listing_id uuid;
 begin
   if not exists (select 1 from public.users where id = auth.uid() and role = 'admin') then
     raise exception 'Forbidden';
   end if;
+
+  select listing_id
+  into target_listing_id
+  from public.ndas
+  where id = p_nda_id;
 
   update public.ndas
   set
@@ -833,6 +746,10 @@ begin
     signed_at = case when p_status = 'signed' then now() else null end,
     updated_at = now()
   where id = p_nda_id;
+
+  if target_listing_id is not null then
+    perform public.refresh_listing_status_from_ndas(target_listing_id);
+  end if;
 end;
 $$;
 

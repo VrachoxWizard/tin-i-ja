@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { MouseEvent } from "react";
 import {
   ArrowRight,
-  Building2,
   Lock,
   MapPin,
   ShieldCheck,
-  TrendingUp,
 } from "lucide-react";
+import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sanitizeHtml } from "@/lib/sanitize";
 
@@ -28,7 +26,6 @@ interface TeaserCardProps {
 }
 
 function formatCurrency(value: number) {
-  // Compact formatting for large values (1M+)
   if (value >= 1_000_000) {
     return new Intl.NumberFormat("hr-HR", {
       style: "currency",
@@ -44,6 +41,8 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+const ROTATION_RANGE = 7;
+
 export function TeaserCard({
   publicCode,
   industry,
@@ -54,130 +53,171 @@ export function TeaserCard({
   blindTeaserHtml,
   isVerified = true,
 }: TeaserCardProps) {
-  // EBITDA margin as a trust signal (ebitda/revenue)
   const ebitdaMargin = revenue > 0 ? Math.round((ebitda / revenue) * 100) : 0;
+
+  // ── Framer Motion Physics ──────────────────────────────────────────────────
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 40 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 40 });
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [`${ROTATION_RANGE}deg`, `-${ROTATION_RANGE}deg`]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [`-${ROTATION_RANGE}deg`, `${ROTATION_RANGE}deg`]);
+
+  // Dynamic Glare tracking
+  const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"]);
+  const glareY = useTransform(mouseYSpring, [-0.5, 0.5], ["0%", "100%"]);
+  const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(212,175,55,0.12) 0%, transparent 60%)`;
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="h-full"
+      className="h-full relative group cursor-pointer"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        perspective: "1200px",
+        transformStyle: "preserve-3d",
+      }}
     >
-      <GlowCard className="flex flex-col h-full border border-border/40 bg-card/95 shadow-glass hover:shadow-glow-gold hover:border-primary/50 transition-all duration-500 rounded-none overflow-hidden group">
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+        className="flex flex-col h-full border border-border/40 bg-card/60 backdrop-blur-md shadow-glass hover:border-primary/40 transition-colors duration-500 rounded-sm overflow-hidden"
+      >
+        {/* Subtle top edge highlight */}
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent group-hover:opacity-100 opacity-50 transition-opacity duration-500" />
 
-        {/* ── Premium accent bar — gold gradient ───────────────────── */}
-        <div className="h-[3px] w-full bg-linear-to-r from-df-trust-blue/60 via-[#D4AF37] to-df-trust-blue/60 group-hover:opacity-100 opacity-80 transition-opacity duration-300" />
+        {/* Dynamic Glare Overlay */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-screen"
+          style={{ background: glareBackground, transform: "translateZ(10px)" }}
+        />
 
-        <CardHeader className="pb-4 pt-7 px-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <CardHeader className="pb-2 pt-6 px-7 relative z-10" style={{ transform: "translateZ(30px)" }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
             <Badge
               variant="outline"
-              className="bg-muted text-muted-foreground border-border font-medium px-3 py-1 rounded-none tracking-wide text-xs"
+              className="bg-transparent text-muted-foreground border-border/50 font-medium px-2.5 py-0.5 tracking-widest text-[10px] uppercase rounded-sm"
             >
               Šifra {publicCode}
             </Badge>
 
             <div className="flex items-center gap-2">
-              {/* EBITDA margin badge */}
               {ebitdaMargin > 0 && (
                 <Badge
                   variant="outline"
-                  className="bg-primary/6 text-primary border-primary/20 rounded-none text-xs font-medium"
+                  className="bg-primary/5 text-primary border-primary/20 text-[10px] font-medium tracking-wide rounded-sm px-2 py-0.5"
                 >
                   {ebitdaMargin}% marža
                 </Badge>
               )}
               {isVerified && (
-                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded-none">
-                  <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                <div className="flex items-center text-emerald-500/80 text-[11px] font-medium tracking-wide uppercase">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-1" />
                   Verificirano
-                </Badge>
+                </div>
               )}
             </div>
           </div>
 
-          <h3 className="text-xl font-heading font-semibold text-foreground leading-tight mb-3">
+          <h3 className="text-xl font-heading font-medium text-foreground leading-tight tracking-tight mb-2">
             Tvrtka u sektoru{" "}
             <span className="text-foreground">{industry}</span>
           </h3>
 
-          <div className="flex items-center text-muted-foreground text-sm">
-            <MapPin className="w-4 h-4 mr-1.5 text-df-trust-blue shrink-0" />
+          <div className="flex items-center text-muted-foreground/70 text-xs tracking-wide">
+            <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0" />
             {region}
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 space-y-5 px-6">
-          {/* ── Financial data grid — elevated numbers ─────────────── */}
-          <div className="grid grid-cols-2 gap-0 border border-border bg-muted/20 divide-x divide-border">
-            <div className="px-5 py-4 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs uppercase tracking-wider">
-                <TrendingUp className="w-3 h-3" />
+        <CardContent className="flex-1 flex flex-col space-y-6 px-7 pt-4 relative z-10" style={{ transform: "translateZ(20px)" }}>
+          {/* ── Financial Data ─────────────── */}
+          <div className="flex items-center gap-8 bg-card-elevated/40 rounded-sm p-4 border border-border/20">
+            <div className="space-y-1">
+              <div className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-semibold">
                 Prihod
               </div>
-              <p className="text-2xl font-heading font-bold text-foreground tabular-nums">
+              <p className="text-2xl font-heading font-medium text-foreground tabular-nums tracking-tight">
                 {formatCurrency(revenue)}
               </p>
             </div>
 
-            <div className="px-5 py-4 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs uppercase tracking-wider">
-                <Building2 className="w-3 h-3" />
+            <div className="w-px h-8 bg-border/40" />
+
+            <div className="space-y-1">
+              <div className="text-muted-foreground/60 text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5">
                 EBITDA
               </div>
-              <p className="text-2xl font-heading font-bold text-primary tabular-nums">
+              <p className="text-2xl font-heading font-medium text-primary tabular-nums tracking-tight">
                 {formatCurrency(ebitda)}
               </p>
             </div>
           </div>
 
           {/* ── Blind teaser excerpt ────────────────────────────────── */}
-          <div className="relative">
+          <div className="relative flex-1">
             <div
-              className="text-sm text-muted-foreground space-y-2 line-clamp-4 leading-relaxed"
+              className="text-sm text-muted-foreground/80 space-y-2 line-clamp-4 leading-relaxed font-sans"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(blindTeaserHtml) }}
             />
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-linear-to-t from-card via-card/80 to-transparent pointer-events-none" />
           </div>
 
-          {/* ── Asking price — revealed at bottom ──────────────────── */}
-          <div className="pt-3 border-t border-border">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5">
+          {/* ── Asking price ──────────────────── */}
+          <div className="pt-2" style={{ transform: "translateZ(40px)" }}>
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-semibold mb-1">
               Očekivana cijena
             </p>
-            <p className="text-3xl font-heading font-bold text-foreground tabular-nums">
+            <p className="text-3xl font-heading font-medium text-foreground tabular-nums tracking-tight">
               {formatCurrency(askingPrice)}
             </p>
           </div>
         </CardContent>
 
-        {/* ── Differentiated CTAs ────────────────────────────────────── */}
-        <CardFooter className="pt-5 pb-6 px-6 border-t border-border bg-muted/10 flex gap-3 mt-auto">
-          {/* Secondary — browse the teaser */}
+        {/* ── CTAs ────────────────────────────────────── */}
+        <CardFooter className="pt-6 pb-6 px-7 flex gap-3 mt-auto relative z-10" style={{ transform: "translateZ(30px)" }}>
           <Link href={`/listings/${publicCode}`} className="flex-1">
             <Button
               variant="outline"
-              className="w-full h-11 rounded-none text-muted-foreground hover:text-foreground border-border hover:border-foreground/30 transition-colors"
+              className="w-full text-xs tracking-widest uppercase cursor-pointer"
             >
-              Pregledaj teaser
+              Teaser
             </Button>
           </Link>
 
-          {/* Primary — request NDA access (gold-accented) */}
-          <Link href={`/listings/${publicCode}`} className="flex-1">
+          <Link href={`/listings/${publicCode}`} className="flex-[1.5]">
             <Button
-              className="w-full h-11 rounded-none bg-df-trust-blue text-white hover:bg-df-trust-blue/90 shadow-[0_0_16px_rgba(21,101,192,0.2)] hover:shadow-[0_0_32px_rgba(21,101,192,0.5)] transition-all duration-300 font-bold tracking-wide"
+              variant="default"
+              className="w-full text-xs tracking-widest uppercase font-semibold cursor-pointer"
             >
-              <Lock className="w-4 h-4 mr-2 shrink-0" />
+              <Lock className="w-3.5 h-3.5 mr-2 shrink-0 opacity-70" />
               NDA pristup
-              <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
+              <ArrowRight className="w-3.5 h-3.5 ml-2 shrink-0 opacity-70" />
             </Button>
           </Link>
         </CardFooter>
-      </GlowCard>
+      </motion.div>
     </motion.div>
   );
 }

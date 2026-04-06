@@ -17,6 +17,15 @@ const FROM = process.env.RESEND_FROM_EMAIL ?? "DealFlow <noreply@resend.dev>";
 /** Admin inbox for internal alerts */
 const ADMIN_EMAIL = process.env.RESEND_ADMIN_EMAIL ?? "";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 function baseLayout(body: string, title: string): string {
@@ -62,14 +71,16 @@ export async function sendNdaRequestEmail(params: {
   dashboardUrl: string;
 }): Promise<void> {
   const { sellerEmail, sellerName, listingCode, dashboardUrl } = params;
+  const safeSellerName = escapeHtml(sellerName);
+  const safeListingCode = escapeHtml(listingCode);
 
   const body = `
     <div class="card">
       <p class="label">Novi NDA zahtjev</p>
       <p style="font-size:18px;font-weight:700;color:#f8fafc;margin:8px 0 16px;">Kupac je zatražio pristup Deal Roomu</p>
       <p style="color:#94a3b8;font-size:14px;line-height:1.6;">
-        Poštovani ${sellerName},<br/><br/>
-        Primili smo NDA zahtjev za vaš oglas <strong style="color:#D4AF37;">${listingCode}</strong>. 
+        Poštovani ${safeSellerName},<br/><br/>
+        Primili smo NDA zahtjev za vaš oglas <strong style="color:#D4AF37;">${safeListingCode}</strong>. 
         Pregledajte zahtjev i odlučite o odobrenju ili odbijanju pristupa.
       </p>
       <a href="${dashboardUrl}" class="btn">Pregled zahtjeva →</a>
@@ -95,6 +106,8 @@ export async function sendNdaDecisionEmail(params: {
 }): Promise<void> {
   const { buyerEmail, buyerName, listingCode, decision, dashboardUrl } = params;
   const approved = decision === "approve";
+  const safeBuyerName = escapeHtml(buyerName);
+  const safeListingCode = escapeHtml(listingCode);
 
   const body = `
     <div class="card">
@@ -103,10 +116,10 @@ export async function sendNdaDecisionEmail(params: {
         ${approved ? "Pristup Deal Roomu je odobren" : "Vaš NDA zahtjev je odbijen"}
       </p>
       <p style="color:#94a3b8;font-size:14px;line-height:1.6;">
-        Poštovani ${buyerName},<br/><br/>
+        Poštovani ${safeBuyerName},<br/><br/>
         ${approved
-          ? `Vaš zahtjev za pristup Deal Roomu oglasa <strong style="color:#D4AF37;">${listingCode}</strong> je <strong style="color:#D4AF37;">odobren</strong>. Sada možete pregledati povjerljivu dokumentaciju.`
-          : `Vaš zahtjev za pristup Deal Roomu oglasa <strong style="color:#ef4444;">${listingCode}</strong> nažalost nije odobren u ovom trenutku.`
+          ? `Vaš zahtjev za pristup Deal Roomu oglasa <strong style="color:#D4AF37;">${safeListingCode}</strong> je <strong style="color:#D4AF37;">odobren</strong>. Sada možete pregledati povjerljivu dokumentaciju.`
+          : `Vaš zahtjev za pristup Deal Roomu oglasa <strong style="color:#ef4444;">${safeListingCode}</strong> nažalost nije odobren u ovom trenutku.`
         }
       </p>
       ${approved ? `<a href="${dashboardUrl}" class="btn">Otvori Deal Room →</a>` : ""}
@@ -134,19 +147,23 @@ export async function sendMatchEmail(params: {
   dashboardUrl: string;
 }): Promise<void> {
   const { buyerEmail, buyerName, listingCode, industry, region, dashboardUrl } = params;
+  const safeBuyerName = escapeHtml(buyerName);
+  const safeListingCode = escapeHtml(listingCode);
+  const safeIndustry = escapeHtml(industry);
+  const safeRegion = escapeHtml(region);
 
   const body = `
     <div class="card">
       <p class="label">Nova investicijska prilika</p>
       <p style="font-size:18px;font-weight:700;color:#D4AF37;margin:8px 0 16px;">Pronađeno uparivanje s vašim profilom</p>
       <p style="color:#94a3b8;font-size:14px;line-height:1.6;">
-        Poštovani ${buyerName},<br/><br/>
+        Poštovani ${safeBuyerName},<br/><br/>
         AI sustav je pronašao novi oglas koji odgovara vašim investicijskim kriterijima.
       </p>
       <div style="border-top:1px solid #1e293b;margin:20px 0;padding-top:20px;">
-        <p class="label">Sektor</p><p class="value">${industry}</p>
-        <p class="label" style="margin-top:12px;">Regija</p><p class="value">${region}</p>
-        <p class="label" style="margin-top:12px;">Šifra oglasa</p><p class="value" style="color:#D4AF37;">${listingCode}</p>
+        <p class="label">Sektor</p><p class="value">${safeIndustry}</p>
+        <p class="label" style="margin-top:12px;">Regija</p><p class="value">${safeRegion}</p>
+        <p class="label" style="margin-top:12px;">Šifra oglasa</p><p class="value" style="color:#D4AF37;">${safeListingCode}</p>
       </div>
       <a href="${dashboardUrl}" class="btn">Pregledaj teaser →</a>
     </div>`;
@@ -175,15 +192,18 @@ export async function sendContactEmail(params: {
   }
 
   const { name, email, message } = params;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeMessage = escapeHtml(message);
 
   const body = `
     <div class="card">
       <p class="label">Kontakt forma</p>
       <p style="font-size:18px;font-weight:700;color:#f8fafc;margin:8px 0 16px;">Nova poruka s web stranice</p>
-      <p class="label">Ime</p><p class="value">${name}</p>
-      <p class="label" style="margin-top:12px;">Email</p><p class="value"><a href="mailto:${email}" style="color:#D4AF37;">${email}</a></p>
+      <p class="label">Ime</p><p class="value">${safeName}</p>
+      <p class="label" style="margin-top:12px;">Email</p><p class="value"><a href="mailto:${safeEmail}" style="color:#D4AF37;">${safeEmail}</a></p>
       <p class="label" style="margin-top:12px;">Poruka</p>
-      <p style="color:#94a3b8;font-size:14px;line-height:1.6;white-space:pre-wrap;">${message}</p>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.6;white-space:pre-wrap;">${safeMessage}</p>
     </div>`;
 
   await resend.emails.send({

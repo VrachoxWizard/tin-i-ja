@@ -13,28 +13,63 @@
   --font-jakarta: var(--font-heading);
   --font-inter: var(--font-sans);
   --font-dm-sans: var(--font-heading);
-  --color-navy: #030712;
-  --color-navy-light: #0B1120;
+
+  /* ── Core brand tokens ───────────────────────────────────────── */
+  --color-navy: var(--color-obsidian);
+  --color-navy-light: var(--color-obsidian-light);
+  /* Champagne Gold: elegant, not harsh */
   --color-gold: #D4AF37;
-  --color-trust: #1565C0;
-  --color-df-navy: #030712;
-  --color-df-trust-blue: #1565c0;
+  --color-gold-muted: #B5952F;
+  --color-gold-bright: #F5E1A4;
+  --color-trust: #1E3A5F;
+  --color-df-navy: #040914;
+  --color-df-trust-blue: #1E3A5F;
   --color-df-gold: #D4AF37;
+  --color-obsidian: #040914;
+  --color-obsidian-light: #0B1324;
+
+  /* ── Surface tokens ──────────────────────────────────────────── */
   --color-card-elevated: var(--card-elevated);
   --color-surface-glass: var(--surface-glass);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* ── Ambient shadow system ────────────────────────────────────── */
+  /* Glass surface: diffuse multi-layer, simulates light off glass */
+  --shadow-glass:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-glass-elevated:
-    0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-glow-gold:
-    0 0 20px rgba(212, 175, 55, 0.15), 0 0 40px rgba(212, 175, 55, 0.05);
+    0 24px 64px rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* Ambient gold: soft, large radius */
+  --shadow-ambient-gold:
+    0 20px 60px rgba(212, 175, 55, 0.04),
+    0 4px 20px rgba(212, 175, 55, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-ambient-gold-intense:
+    0 30px 80px rgba(212, 175, 55, 0.08),
+    0 8px 30px rgba(212, 175, 55, 0.12),
+    0 0 0 1px rgba(212, 175, 55, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* Kept for compatibility — now maps to ambient */
+  --shadow-glow-gold: var(--shadow-ambient-gold);
   --shadow-glow-trust:
-    0 0 20px rgba(37, 99, 235, 0.15), 0 0 40px rgba(37, 99, 235, 0.05);
+    0 0 20px rgba(30, 58, 95, 0.15), 0 0 40px rgba(30, 58, 95, 0.05);
   --shadow-inner-subtle:
-    inset 0 1px 1px rgba(255, 255, 255, 0.1),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+
+  /* ── Easing tokens ───────────────────────────────────────────── */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-vault: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Sidebar & chart passthrough ─────────────────────────────── */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -73,6 +108,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Light mode ──────────────────────────────────────────────────────────────── */
 :root {
   --background: #f7f8fa;
   --foreground: #102033;
@@ -80,7 +116,7 @@
   --card-foreground: #102033;
   --popover: #ffffff;
   --popover-foreground: #102033;
-  --primary: #1565c0;
+  --primary: #1E3A5F;
   --primary-foreground: #ffffff;
   --secondary: #D4AF37;
   --secondary-foreground: #ffffff;
@@ -91,8 +127,8 @@
   --destructive: #ef4444;
   --border: #d7e0ea;
   --input: #d7e0ea;
-  --ring: #1565c0;
-  --chart-1: #1565c0;
+  --ring: #1E3A5F;
+  --chart-1: #1E3A5F;
   --chart-2: #D4AF37;
   --chart-3: #102033;
   --chart-4: #60748a;
@@ -100,97 +136,122 @@
   --radius: 0.5rem;
   --sidebar: #f8fafc;
   --sidebar-foreground: #102033;
-  --sidebar-primary: #1565c0;
+  --sidebar-primary: #1E3A5F;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eef3f8;
   --sidebar-accent-foreground: #102033;
   --sidebar-border: #d7e0ea;
-  --sidebar-ring: #1565c0;
+  --sidebar-ring: #1E3A5F;
   --surface-glass: rgba(255, 255, 255, 0.7);
   --card-elevated: #ffffff;
 }
 
+/* ── Dark mode ───────────────────────────────────────────────────────────────── */
 .dark {
-  --background: #030712;
-  --foreground: #f8fafc;
-  --card: #050a15;
-  --card-foreground: #f8fafc;
-  --card-elevated: #0b1120;
-  --surface-glass: rgba(5, 10, 21, 0.4);
-  --popover: #050a15;
-  --popover-foreground: #f8fafc;
+  /* Deepened with slate/obsidian undertones to look elegant and high-net-worth */
+  --background: #040914;
+  --foreground: #F8FAFC;
+
+  /* Card base: very dark navy-slate */
+  --card: #08101E;
+  --card-foreground: #F8FAFC;
+
+  /* Elevated card: gentle distinction */
+  --card-elevated: #0B1324;
+
+  /* True glassmorphism surface */
+  --surface-glass: rgba(11, 19, 36, 0.6);
+
+  --popover: #08101E;
+  --popover-foreground: #F8FAFC;
+
+  /* Primary = champagne gold in dark mode */
   --primary: #D4AF37;
-  --primary-foreground: #030712;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #0f172a;
-  --muted-foreground: #94a3b8;
-  --accent: #0f172a;
-  --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
-  --border: #1e293b;
-  --input: #1e293b;
+  --primary-foreground: #040914;
+
+  --secondary: #121C2D;
+  --secondary-foreground: #F8FAFC;
+  --muted: #0C1526;
+  --muted-foreground: #8899B0;
+  --accent: #0C1526;
+  --accent-foreground: #F8FAFC;
+  --destructive: #EF4444;
+  --border: #18243A;
+  --input: #18243A;
   --ring: #D4AF37;
-  --chart-1: #3B4C68;
+  --chart-1: #2D4068;
   --chart-2: #D4AF37;
-  --chart-3: #f8fafc;
-  --chart-4: #94a3b8;
-  --chart-5: #1e293b;
-  --sidebar: #050a15;
-  --sidebar-foreground: #f8fafc;
+  --chart-3: #F8FAFC;
+  --chart-4: #8899B0;
+  --chart-5: #18243A;
+  --sidebar: #08101E;
+  --sidebar-foreground: #F8FAFC;
   --sidebar-primary: #D4AF37;
-  --sidebar-primary-foreground: #030712;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #1e293b;
+  --sidebar-primary-foreground: #040914;
+  --sidebar-accent: #121C2D;
+  --sidebar-accent-foreground: #F8FAFC;
+  --sidebar-border: #18243A;
   --sidebar-ring: #D4AF37;
 }
 
+/* ── Base layer ────────────────────────────────────────────────────────────────  */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Deep atmospheric background for dark mode */
   .dark body {
+    background-color: #040914;
     background-image:
-      radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05), transparent 25%),
-      radial-gradient(circle at 85% 30%, rgba(21, 101, 192, 0.05), transparent 25%);
+      /* Top-left champagne warmth — subtle and large */
+      radial-gradient(circle at 10% 0%, rgba(212, 175, 55, 0.02) 0%, transparent 50%),
+      /* Top-right slate cool depth */
+      radial-gradient(circle at 90% 10%, rgba(30, 58, 95, 0.03) 0%, transparent 60%);
   }
+
   html {
     @apply font-sans;
   }
+
+  /* Sophisticated Typography Scaling */
   h1 {
     @apply font-heading font-semibold tracking-tight;
-    font-size: clamp(2.8rem, 5vw + 1rem, 5.8rem);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.5rem, 4.5vw + 1rem, 4.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
   }
   h2 {
     @apply font-heading font-semibold tracking-tight;
-    font-size: clamp(2.2rem, 4vw + 1rem, 4.2rem);
-    line-height: 1.08;
-    letter-spacing: -0.015em;
+    font-size: clamp(2rem, 3.5vw + 1rem, 3.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
   }
   h3 {
     @apply font-heading font-semibold tracking-tight;
-    font-size: clamp(1.4rem, 1.7vw + 1rem, 2.2rem);
-    line-height: 1.2;
+    font-size: clamp(1.25rem, 1.5vw + 1rem, 1.75rem);
+    line-height: 1.25;
   }
   h4 {
     @apply font-heading font-semibold tracking-tight;
-    font-size: clamp(1.25rem, 1.5vw + 1rem, 1.5rem);
-    line-height: 1.3;
+    font-size: clamp(1.125rem, 1.25vw + 1rem, 1.25rem);
+    line-height: 1.35;
   }
   p {
     @apply leading-relaxed;
   }
 }
 
-/* Masterpiece Elements */
+/* ── Typography effects ────────────────────────────────────────────────────────── */
 .text-glow-gold {
-  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.2);
+  /* Softened the glow massively for quiet luxury feel */
+  text-shadow:
+    0 0 20px rgba(212, 175, 55, 0.15),
+    0 0 40px rgba(212, 175, 55, 0.05);
 }
 
 .border-gradient-gold {
@@ -202,7 +263,12 @@
   position: absolute;
   inset: -1px;
   border-radius: calc(var(--radius-xl) + 1px);
-  background: linear-gradient(120deg, rgba(212,175,55,0.1), rgba(212,175,55,0.4), rgba(212,175,55,0.1));
+  background: linear-gradient(
+    120deg,
+    rgba(212, 175, 55, 0.05),
+    rgba(212, 175, 55, 0.25),
+    rgba(212, 175, 55, 0.05)
+  );
   z-index: -1;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -211,36 +277,81 @@
 }
 
 .clip-text-gold {
-  background: linear-gradient(110deg, #ffffff 0%, #D4AF37 50%, #b08a3c 100%);
+  background: linear-gradient(
+    110deg,
+    #F5E1A4 0%,
+    #D4AF37 40%,
+    #E8D5A0 60%,
+    #B5952F 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+/* ── Glass surface utility ──────────────────────────────────────────────────────── */
+.glass-surface {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-glass);
+}
+
+/* ── Vault card hover system ────────────────────────────────────────────────────── */
+.vault-card {
+  transition:
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s ease;
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
+.vault-card:hover {
+  transform: translateY(-4px) scale(1.01) translateZ(0);
+  box-shadow: var(--shadow-ambient-gold-intense);
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* ── Levitation animation ───────────────────────────────────────────────────────── */
+@keyframes levitate {
+  0%, 100% {
+    transform: translateY(0px) rotateX(0deg);
+  }
+  33% {
+    transform: translateY(-8px) rotateX(0.5deg);
+  }
+  66% {
+    transform: translateY(-4px) rotateX(-0.3deg);
+  }
+}
+
+.animate-levitate {
+  animation: levitate 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
+/* Kept for compatibility */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
-
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-/* Shimmer sweep effect for premium CTAs */
+/* ── Shimmer sweep for premium CTAs ────────────────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .btn-shimmer {
   position: relative;
   overflow: hidden;
 }
-
 .btn-shimmer::after {
   content: "";
   position: absolute;
@@ -248,70 +359,67 @@
   background: linear-gradient(
     120deg,
     transparent 30%,
-    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.18) 50%,
     transparent 70%
   );
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.4s;
 }
-
 .btn-shimmer:hover::after {
   opacity: 1;
 }
 
-/* GPU compositing for heavy blur elements */
+/* ── GPU compositing helpers ────────────────────────────────────────────────────── */
 .gpu-layer {
-  will-change: transform;
+  will-change: transform, opacity;
   contain: layout style paint;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* For animated parallax containers */
+.parallax-host {
+  will-change: transform;
+  transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* Reduced motion: suppress all non-essential animations */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* ── Iso reveal target — starting state set by GSAP ──────────────────────────────── */
+.iso-reveal-target {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
-/* Focus glow for inputs */
+/* ── Focus glow for form inputs ────────────────────────────────────────────────── */
 @layer base {
   [data-slot="input"]:focus-visible,
   [data-slot="textarea"]:focus-visible {
     border-color: var(--ring);
     box-shadow:
-      0 0 0 3px rgba(212, 175, 55, 0.12),
-      0 0 20px rgba(212, 175, 55, 0.08),
-      0 0 40px rgba(212, 175, 55, 0.04);
+      0 0 0 3px rgba(201, 168, 76, 0.10),
+      0 0 20px rgba(201, 168, 76, 0.06),
+      0 0 40px rgba(201, 168, 76, 0.03);
   }
 }
 
-/* Skeleton shimmer sweep */
+/* ── Skeleton shimmer sweep ─────────────────────────────────────────────────────── */
 @keyframes skeleton-shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes glow-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(201, 165, 80, 0.3);
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(201, 168, 76, 0.25);
   }
   50% {
     box-shadow:
-      0 0 25px rgba(201, 165, 80, 0.5),
-      0 0 40px rgba(201, 165, 80, 0.2);
+      0 0 25px rgba(201, 168, 76, 0.45),
+      0 0 50px rgba(201, 168, 76, 0.15);
   }
 }
 
@@ -319,7 +427,6 @@
   position: relative;
   overflow: hidden;
 }
-
 .skeleton-shimmer::after {
   content: "";
   position: absolute;
@@ -335,12 +442,20 @@
   animation: skeleton-shimmer 1.8s ease-in-out infinite;
 }
 
-/* Footer animated gradient line */
+/* ── Footer animated gradient line ─────────────────────────────────────────────── */
 @keyframes gradient-line {
-  0% {
-    background-position: 0% 0;
-  }
-  100% {
-    background-position: 200% 0;
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Reduced motion: suppress all non-essential animations ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

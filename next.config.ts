@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -17,6 +18,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Remove "X-Powered-By: Next.js" from every response
   poweredByHeader: false,
+  compress: true,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "gsap", "framer-motion", "@radix-ui/react-icons", "date-fns"],
+  },
 
   images: {
     qualities: [75, 90],
@@ -41,4 +46,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const analyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default analyzer(nextConfig);

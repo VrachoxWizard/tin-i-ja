@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Lock, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createDealRoomSignedUrl } from "@/lib/deal-room";
 import { SellerDealRoomUploadForm } from "@/components/features/SellerDealRoomUploadForm";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ interface SellerDealRoomPageProps {
 export default async function SellerDealRoomPage({ params }: SellerDealRoomPageProps) {
   const { listingId } = await params;
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const {
     data: { user },
@@ -60,7 +62,7 @@ export default async function SellerDealRoomPage({ params }: SellerDealRoomPageP
   );
 
   const { data: buyers } = signedBuyerIds.length
-    ? await supabase.from("users").select("id, full_name, email").in("id", signedBuyerIds)
+    ? await admin.from("users").select("id, full_name, email").in("id", signedBuyerIds)
     : { data: [] };
 
   const buyerMap = new Map(

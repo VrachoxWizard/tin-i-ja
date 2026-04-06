@@ -2,16 +2,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import type { Database } from "@/lib/database.types";
+import { sendMatchEmail } from "@/lib/email";
 import type {
   BuyerProfileMatchInput,
   ListingMatchInput,
 } from "@/lib/contracts";
+import { createNotification } from "@/lib/notifications";
 import {
   buildFallbackMatchNarrative,
   calculateMatchScore,
 } from "@/lib/matching";
 
 type TypedSupabaseClient = SupabaseClient<Database>;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dealflow.hr";
 
 function mapListing(
   listing: Database["public"]["Tables"]["listings"]["Row"],
@@ -107,6 +110,12 @@ async function syncPair(
     listingInput,
     result,
   );
+  const { data: existingMatch } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("buyer_profile_id", buyerProfile.id)
+    .eq("listing_id", listing.id)
+    .maybeSingle();
   const aiNarrative = await buildAiNarrative(
     buyer,
     listingInput,
@@ -114,7 +123,7 @@ async function syncPair(
     fallbackNarrative,
   );
 
-  await supabase.from("matches").upsert(
+  const { data: upsertedMatch, error: upsertError } = await supabase.from("matches").upsert(
     {
       buyer_profile_id: buyerProfile.id,
       listing_id: listing.id,
@@ -123,7 +132,41 @@ async function syncPair(
       status: "new",
     },
     { onConflict: "listing_id,buyer_profile_id" },
-  );
+  ).select("id").single();
+
+  if (upsertError || existingMatch || !upsertedMatch) {
+    return;
+  }
+
+  const { data: buyerUser } = await supabase
+    .from("users")
+    .select("email, full_name")
+    .eq("id", buyer.userId)
+    .maybeSingle();
+
+  if (!buyerUser) {
+    return;
+  }
+
+  await createNotification({
+    admin: supabase,
+    userId: buyer.userId,
+    type: "match_found",
+    title: "Nova podudarna prilika",
+    body: `Pronađen je novi oglas (${listing.public_code ?? listing.id}) koji odgovara vašem profilu.`,
+    entityId: listing.id,
+  });
+
+  if (buyerUser.email) {
+    await sendMatchEmail({
+      buyerEmail: buyerUser.email,
+      buyerName: buyerUser.full_name ?? "Kupac",
+      listingCode: listing.public_code ?? listing.id,
+      industry: listing.industry_nkd,
+      region: listing.region,
+      dashboardUrl: `${siteUrl}/dashboard/buyer`,
+    });
+  }
 }
 
 const CONCURRENCY = 3;

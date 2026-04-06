@@ -254,6 +254,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          body: string;
+          created_at: string;
+          entity_id: string | null;
+          id: string;
+          read_at: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          entity_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          entity_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          title?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           created_at: string;
@@ -341,6 +374,28 @@ export interface Database {
           p_entity_type: string;
           p_entity_id?: string | null;
           p_metadata?: Json;
+        };
+        Returns: undefined;
+      };
+      create_notification: {
+        Args: {
+          p_body: string;
+          p_entity_id?: string | null;
+          p_title: string;
+          p_type: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
+      refresh_listing_status_from_ndas: {
+        Args: {
+          p_listing_id: string;
+        };
+        Returns: undefined;
+      };
+      update_own_profile: {
+        Args: {
+          p_full_name: string;
         };
         Returns: undefined;
       };

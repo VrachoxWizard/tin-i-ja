@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Pencil, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getDashboardPathForRole } from "@/lib/contracts";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +44,7 @@ export default async function AdminListingsPage({
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") redirect("/dashboard/buyer");
+  if (profile?.role !== "admin") redirect(getDashboardPathForRole(profile?.role));
 
   const [{ count: listingsCount }, [{ data: listings, error: listingsError }, { data: brokers }]] = await Promise.all([
     supabase.from("listings").select("*", { count: "exact", head: true }),

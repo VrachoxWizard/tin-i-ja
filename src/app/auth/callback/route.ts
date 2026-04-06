@@ -24,5 +24,5 @@ export async function GET(request: Request) {
   }
 
   // Auth code exchange failed — redirect to error page
-  return NextResponse.redirect(`${origin}/login?error=Autentikacija nije uspjela`)
+  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }

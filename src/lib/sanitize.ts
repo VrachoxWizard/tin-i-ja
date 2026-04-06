@@ -17,6 +17,7 @@ export function sanitizeHtml(dirty: string): string {
     ],
     // Strip ALL attributes — no class, style, data-*, href, or src on AI output
     ALLOWED_ATTR: [],
+    ALLOW_DATA_ATTR: false,
     // Extra defense: forbid any attribute that contains javascript:
     FORBID_ATTR: ["style", "class", "id", "onclick", "onerror", "onload"],
   });

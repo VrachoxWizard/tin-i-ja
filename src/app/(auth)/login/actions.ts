@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getDashboardPathForRole } from '@/lib/contracts'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -18,22 +19,20 @@ export async function login(formData: FormData) {
     redirect('/login?error=auth_failed')
   }
 
-  // Determine dashboard based on user role
-  let dashboardPath = '/dashboard/buyer'
+  let dashboardPath = getDashboardPathForRole(null)
   if (authData.user) {
     const { data: profileData } = await supabase
       .from('users')
-      .select('role')
+      .select('role, suspended_at')
       .eq('id', authData.user.id)
-      .single()
+      .maybeSingle()
 
-    if (profileData?.role === 'admin') {
-      dashboardPath = '/dashboard/admin'
-    } else if (profileData?.role === 'seller') {
-      dashboardPath = '/dashboard/seller'
-    } else if (profileData?.role === 'broker') {
-      dashboardPath = '/dashboard/broker'
+    if (profileData?.suspended_at) {
+      await supabase.auth.signOut()
+      redirect('/login?error=account_suspended')
     }
+
+    dashboardPath = getDashboardPathForRole(profileData?.role)
   }
 
   revalidatePath('/', 'layout')

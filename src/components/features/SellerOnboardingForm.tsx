@@ -36,12 +36,12 @@ const sellerFormSchema = z.object({
   company_name: z.string().min(2, "Minimalno 2 znaka").max(120),
   industry: z.string().min(2, "Oblavezno odaberite industriju"),
   region: z.string().min(2, "Obavezno odaberite regiju"),
-  year_founded: z.coerce.number().min(1900, "Neispravna godina").max(new Date().getFullYear()),
-  employees: z.coerce.number().min(1, "Minimalno 1 zaposlenik"),
-  revenue: z.coerce.number().min(0, "Ne može biti negativno"),
-  ebitda: z.coerce.number().min(0, "Ne može biti negativno"),
-  sde: z.coerce.number().min(0).default(0),
-  asking_price: z.coerce.number().min(0, "Ne može biti negativno"),
+  year_founded: z.number().min(1900, "Neispravna godina").max(new Date().getFullYear()),
+  employees: z.number().min(1, "Minimalno 1 zaposlenik"),
+  revenue: z.number().min(0, "Ne može biti negativno"),
+  ebitda: z.number().min(0, "Ne može biti negativno"),
+  sde: z.number().min(0),
+  asking_price: z.number().min(0, "Ne može biti negativno"),
   reason_for_sale: z.string().min(12, "Unesite najmanje 12 znakova"),
   transition_support: z.string().min(12, "Unesite najmanje 12 znakova"),
   owner_dependency_score: z.number().min(1).max(5),
@@ -62,24 +62,17 @@ export function SellerOnboardingForm() {
     trigger,
     formState: { errors },
   } = useForm<SellerFormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(sellerFormSchema) as any,
+    resolver: zodResolver(sellerFormSchema),
     defaultValues: {
       company_name: "",
       industry: "",
       region: "",
-      year_founded: "" as any,
-      employees: "" as any,
-      revenue: "" as any,
-      ebitda: "" as any,
-      sde: "" as any, // Optional field tracking
-      asking_price: "" as any,
+      sde: 0,
       reason_for_sale: "",
       transition_support: "",
       owner_dependency_score: 3,
       digital_maturity: 3,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
+    },
     mode: "onTouched",
   });
 
@@ -267,7 +260,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="year_founded">Godina osnivanja</Label>
                     <Input
-                      {...register("year_founded")}
+                      {...register("year_founded", { valueAsNumber: true })}
                       type="number"
                       placeholder="2012"
                       className={`h-12 rounded-none ${errors.year_founded ? "border-destructive" : ""}`}
@@ -278,7 +271,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="employees">Broj zaposlenih</Label>
                     <Input
-                      {...register("employees")}
+                      {...register("employees", { valueAsNumber: true })}
                       type="number"
                       placeholder="18"
                       className={`h-12 rounded-none ${errors.employees ? "border-destructive" : ""}`}
@@ -302,7 +295,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="revenue">Godišnji prihod (EUR)</Label>
                     <Input
-                      {...register("revenue")}
+                      {...register("revenue", { valueAsNumber: true })}
                       type="number"
                       placeholder="850000"
                       className={`h-12 rounded-none ${errors.revenue ? "border-destructive" : ""}`}
@@ -313,7 +306,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="ebitda">EBITDA (EUR)</Label>
                     <Input
-                      {...register("ebitda")}
+                      {...register("ebitda", { valueAsNumber: true })}
                       type="number"
                       placeholder="190000"
                       className={`h-12 rounded-none ${errors.ebitda ? "border-destructive" : ""}`}
@@ -326,7 +319,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="sde">SDE (EUR)</Label>
                     <Input
-                      {...register("sde")}
+                      {...register("sde", { valueAsNumber: true })}
                       type="number"
                       placeholder="220000"
                       className="h-12 rounded-none"
@@ -337,7 +330,7 @@ export function SellerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="asking_price">Tražena cijena (EUR)</Label>
                     <Input
-                      {...register("asking_price")}
+                      {...register("asking_price", { valueAsNumber: true })}
                       type="number"
                       placeholder="1200000"
                       className={`h-12 rounded-none ${errors.asking_price ? "border-destructive" : ""}`}

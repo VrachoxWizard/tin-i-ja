@@ -1,11 +1,13 @@
 'use server'
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit";
 import type { ActionResult } from "@/app/actions/dealflow";
-import { USER_ROLES, LISTING_STATUSES, NDA_STATUSES } from "@/lib/contracts";
+import { USER_ROLES, LISTING_STATUSES, NDA_STATUSES, getDashboardPathForRole } from "@/lib/contracts";
 
 const updateUserSchema = z.object({
   full_name: z.string().min(1).max(120).optional(),
@@ -31,25 +33,31 @@ const updateListingSchema = z.object({
 
 async function requireAdmin() {
   const supabase = await createClient();
+  const admin = createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    redirect("/login");
   }
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role")
+    .select("role, suspended_at")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (profile?.role !== "admin") {
-    throw new Error("Forbidden: admin role required");
+  if (profile?.suspended_at) {
+    await supabase.auth.signOut();
+    redirect("/login?error=account_suspended");
   }
 
-  return { supabase, user };
+  if (profile?.role !== "admin") {
+    redirect(getDashboardPathForRole(profile?.role));
+  }
+
+  return { supabase, admin, user };
 }
 
 // ── User Management ──────────────────────────────────────────────
@@ -170,11 +178,11 @@ export async function adminUpdateListingAction(
     return { error: "Neispravni podaci za ažuriranje oglasa." };
   }
 
-  const { supabase } = await requireAdmin();
+  const { supabase, admin } = await requireAdmin();
 
   const updateFields: Record<string, unknown> = { ...parsed.data, updated_at: new Date().toISOString() };
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("listings")
     .update(updateFields)
     .eq("id", listingId);
@@ -304,7 +312,7 @@ export async function adminAssignBrokerAction(
   listingId: string,
   brokerId: string | null,
 ): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+  const { supabase, admin } = await requireAdmin();
 
   if (brokerId) {
     const { data: broker } = await supabase
@@ -318,7 +326,7 @@ export async function adminAssignBrokerAction(
     }
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("listings")
     .update({ broker_id: brokerId })
     .eq("id", listingId);

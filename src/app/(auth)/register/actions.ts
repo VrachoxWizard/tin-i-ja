@@ -4,11 +4,15 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { validatePassword } from '@/lib/password-validation'
+import {
+  getDashboardPathForRole,
+  normalizeSelfSignupRole,
+} from '@/lib/contracts'
 
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const role = (formData.get('role') as string) || 'buyer'
+  const role = normalizeSelfSignupRole(formData.get('role') as string | null)
   const password = formData.get('password') as string
 
   const passwordError = validatePassword(password)
@@ -33,8 +37,6 @@ export async function signup(formData: FormData) {
     redirect('/register?error=signup_failed')
   }
 
-  const dashboardPath = role === 'seller' ? '/dashboard/seller' : '/dashboard/buyer'
-
   revalidatePath('/', 'layout')
-  redirect(dashboardPath)
+  redirect(getDashboardPathForRole(role))
 }

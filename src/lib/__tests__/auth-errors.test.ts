@@ -19,6 +19,7 @@ describe("getAuthErrorMessage", () => {
     expect(getAuthErrorMessage("invalid_email")).toBe(
       "Unesite valjanu email adresu.",
     );
+    expect(getAuthErrorMessage("account_suspended")).toContain("suspendiran");
   });
 
   it("returns all password error messages correctly", () => {

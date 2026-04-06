@@ -9,6 +9,7 @@ import { logout } from "@/app/(auth)/logout/actions";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
+import { getDashboardPathForRole } from "@/lib/contracts";
 
 const navLinks = [
   { href: "/sell", label: "Prodajem" },
@@ -101,20 +102,30 @@ export function Header() {
   useEffect(() => {
     const supabase = createClient();
 
-    function getRoleCookie(): string | undefined {
-      const match = document.cookie.match(/(?:^|;\s*)df-role=([^;]*)/);
-      return match?.[1] || undefined;
+    async function hydrateUser(authUser: { id: string }) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role, suspended_at")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      if (profile?.suspended_at) {
+        setUser(null);
+        return;
+      }
+
+      setUser({ id: authUser.id, role: profile?.role });
     }
 
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       if (authUser) {
-        setUser({ id: authUser.id, role: getRoleCookie() || authUser.user_metadata?.role });
+        void hydrateUser(authUser);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, role: getRoleCookie() || session.user.user_metadata?.role });
+        void hydrateUser(session.user);
       } else {
         setUser(null);
       }
@@ -125,14 +136,7 @@ export function Header() {
 
   const closeMenu = useCallback(() => setMobileMenuOpen(false), []);
 
-  const dashboardPath =
-    user?.role === "admin"
-      ? "/dashboard/admin"
-      : user?.role === "broker"
-        ? "/dashboard/broker"
-        : user?.role === "seller"
-          ? "/dashboard/seller"
-          : "/dashboard/buyer";
+  const dashboardPath = getDashboardPathForRole(user?.role);
 
   return (
     <>
@@ -187,11 +191,11 @@ export function Header() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" className="h-10 px-5 rounded-none text-sm font-semibold tracking-widest uppercase hover:text-foreground">Prijava</Button>
+                  <Button variant="ghost" className="h-10 px-5 rounded-none text-sm font-semibold tracking-widest uppercase hover:text-foreground">Autorizacija</Button>
                 </Link>
                 <Link href="/register">
                   <Button className="h-10 px-6 rounded-none border border-primary/50 btn-shimmer bg-card-elevated/80 backdrop-blur-md hover:bg-primary/20 text-foreground text-sm font-semibold uppercase tracking-[0.18em] shadow-glow-gold transition-all duration-500">
-                    Započni
+                    Zahtjev za Pristup
                   </Button>
                 </Link>
               </>
@@ -282,12 +286,12 @@ export function Header() {
                     <>
                       <Link href="/register" onClick={closeMenu}>
                         <Button className="w-full rounded-none h-14 border border-primary/50 btn-shimmer bg-primary/15 text-foreground text-xs tracking-[0.25em] uppercase shadow-glow-gold hover:bg-primary/30 transition-colors">
-                          Započni Ekskluzivno
+                          Zahtjev za Pristup
                         </Button>
                       </Link>
                       <Link href="/login" onClick={closeMenu}>
                         <Button variant="outline" className="w-full rounded-none h-12 border-primary/30 bg-transparent text-xs tracking-[0.2em] uppercase hover:bg-card-elevated">
-                          Prijava
+                          Autorizacija
                         </Button>
                       </Link>
                     </>

@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Building2, FileText, FolderOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getDashboardPathForRole } from "@/lib/contracts";
 import { Badge } from "@/components/ui/badge";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,7 @@ export default async function BrokerListingDetailPage({
 }) {
   const { listingId } = await params;
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const {
     data: { user },
@@ -35,7 +38,7 @@ export default async function BrokerListingDetailPage({
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "broker") redirect("/dashboard/buyer");
+  if (profile?.role !== "broker") redirect(getDashboardPathForRole(profile?.role));
 
   const { data: listing, error: listingError } = await supabase
     .from("listings")
@@ -64,7 +67,7 @@ export default async function BrokerListingDetailPage({
   // Fetch buyer names for NDAs
   const buyerIds = [...new Set(allNdas.map((n) => n.buyer_id))];
   const { data: buyersData } = buyerIds.length > 0
-    ? await supabase.from("users").select("id, full_name, email").in("id", buyerIds)
+    ? await admin.from("users").select("id, full_name, email").in("id", buyerIds)
     : { data: [] as { id: string; full_name: string; email: string }[] };
 
   const buyerMap = new Map((buyersData ?? []).map((b) => [b.id, b.full_name || b.email]));

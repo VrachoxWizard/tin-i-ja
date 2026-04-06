@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createDealRoomSignedUrl } from "@/lib/deal-room";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ interface DealRoomPageProps {
 export default async function DealRoomPage({ params }: DealRoomPageProps) {
   const { listingId } = await params;
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const {
     data: { user },
@@ -74,7 +76,7 @@ export default async function DealRoomPage({ params }: DealRoomPageProps) {
   }
 
   const [{ data: seller }, { data: files }] = await Promise.all([
-    supabase
+    admin
       .from("users")
       .select("full_name, email")
       .eq("id", listing.owner_id)

@@ -37,10 +37,10 @@ import { BUYER_INDUSTRIES, REGIONS } from "@/data/constants";
 // Wide open inputs for target bounds per user specs.
 const buyerSchema = z.object({
   buyer_type: z.string().min(1, "Navedite tip investitora"),
-  target_ev_min: z.coerce.number().min(0, "Mora biti pozitivno"),
-  target_ev_max: z.coerce.number().min(0, "Mora biti pozitivno"),
-  target_revenue_min: z.coerce.number().min(0, "Mora biti pozitivno"),
-  target_revenue_max: z.coerce.number().min(0, "Mora biti pozitivno"),
+  target_ev_min: z.number().min(0, "Mora biti pozitivno"),
+  target_ev_max: z.number().min(0, "Mora biti pozitivno"),
+  target_revenue_min: z.number().min(0, "Mora biti pozitivno"),
+  target_revenue_max: z.number().min(0, "Mora biti pozitivno"),
   target_industries: z.array(z.string()).min(1, "Odaberite barem jedan sektor"),
   target_regions: z.array(z.string()).min(1, "Odaberite barem jednu regiju"),
   investment_thesis: z.string().min(12, "Unesite detaljnije (barem 12 znakova)"),
@@ -99,9 +99,9 @@ const ToggleChips = React.memo(function ToggleChips({
               }
             }}
             aria-pressed={active}
-            className={`px-3 py-1.5 text-xs font-medium border transition-colors rounded-none ${
+            className={`px-3 py-1.5 text-xs font-medium border transition-all duration-300 cursor-pointer rounded-none ${
               active
-                ? "bg-primary text-primary-foreground border-primary"
+                ? "bg-primary text-primary-foreground border-primary shadow-glow-gold"
                 : "bg-transparent text-muted-foreground border-border hover:border-primary/60 hover:text-foreground"
             }`}
           >
@@ -125,19 +125,13 @@ export function BuyerOnboardingForm() {
     trigger,
     formState: { errors },
   } = useForm<BuyerFormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(buyerSchema) as any,
+    resolver: zodResolver(buyerSchema),
     defaultValues: {
       buyer_type: "",
-      target_ev_min: "" as any,
-      target_ev_max: "" as any,
-      target_revenue_min: "" as any,
-      target_revenue_max: "" as any,
       target_industries: [],
       target_regions: [],
       investment_thesis: "",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
+    },
     mode: "onTouched",
   });
 
@@ -166,7 +160,7 @@ export function BuyerOnboardingForm() {
     const payload = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        payload.set(key, value.join(","));
+        value.forEach((entry) => payload.append(key, entry));
       } else {
         payload.set(key, String(value));
       }
@@ -225,7 +219,7 @@ export function BuyerOnboardingForm() {
     <Card className="border-border bg-card/70 backdrop-blur-sm rounded-none relative overflow-hidden">
       <div className="absolute top-0 left-0 h-1 bg-muted/60 w-full">
         <motion.div
-          className="h-full bg-primary"
+          className="h-full bg-primary shadow-[0_0_15px_rgba(201,168,76,0.5)]"
           initial={{ width: "33.33%" }}
           animate={{ width: `${(step / 3) * 100}%` }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
@@ -265,7 +259,7 @@ export function BuyerOnboardingForm() {
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className={`h-12 rounded-none ${errors.buyer_type ? "border-destructive" : ""}`}>
+                        <SelectTrigger className={`h-14 bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus:ring-0 focus:border-primary transition-all duration-300 text-lg font-heading tracking-wide ${errors.buyer_type ? "border-destructive" : ""}`}>
                           <SelectValue placeholder="Odaberite profil investitora" />
                         </SelectTrigger>
                         <SelectContent className="rounded-none">
@@ -279,14 +273,14 @@ export function BuyerOnboardingForm() {
                   {errors.buyer_type && <p className="text-xs text-destructive">{errors.buyer_type.message}</p>}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-8">
                   <div className="space-y-3">
                     <Label htmlFor="target_ev_min">Minimalni EV (EUR)</Label>
                     <Input
-                      {...register("target_ev_min")}
+                      {...register("target_ev_min", { valueAsNumber: true })}
                       type="number"
                       placeholder="Npr. 0 za vrlo rane"
-                      className={`h-12 rounded-none ${errors.target_ev_min ? "border-destructive" : ""}`}
+                      className={`h-14 bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all duration-300 text-lg font-heading tracking-wide placeholder:text-muted-foreground/30 ${errors.target_ev_min ? "border-destructive" : ""}`}
                     />
                     {errors.target_ev_min && <p className="text-xs text-destructive">{errors.target_ev_min.message}</p>}
                   </div>
@@ -294,10 +288,10 @@ export function BuyerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="target_ev_max">Maksimalni EV (EUR)</Label>
                     <Input
-                      {...register("target_ev_max")}
+                      {...register("target_ev_max", { valueAsNumber: true })}
                       type="number"
                       placeholder="Bez ograničenja"
-                      className={`h-12 rounded-none ${errors.target_ev_max ? "border-destructive" : ""}`}
+                      className={`h-14 bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all duration-300 text-lg font-heading tracking-wide placeholder:text-muted-foreground/30 ${errors.target_ev_max ? "border-destructive" : ""}`}
                     />
                     {errors.target_ev_max && <p className="text-xs text-destructive">{errors.target_ev_max.message}</p>}
                   </div>
@@ -318,14 +312,14 @@ export function BuyerOnboardingForm() {
                 transition={{ type: "spring", stiffness: 260, damping: 28 }}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-8">
                   <div className="space-y-3">
                     <Label htmlFor="target_revenue_min">Minimalni prihod (EUR)</Label>
                     <Input
-                      {...register("target_revenue_min")}
+                      {...register("target_revenue_min", { valueAsNumber: true })}
                       type="number"
                       placeholder="0"
-                      className={`h-12 rounded-none ${errors.target_revenue_min ? "border-destructive" : ""}`}
+                      className={`h-14 bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all duration-300 text-lg font-heading tracking-wide placeholder:text-muted-foreground/30 ${errors.target_revenue_min ? "border-destructive" : ""}`}
                     />
                     {errors.target_revenue_min && <p className="text-xs text-destructive">{errors.target_revenue_min.message}</p>}
                   </div>
@@ -333,10 +327,10 @@ export function BuyerOnboardingForm() {
                   <div className="space-y-3">
                     <Label htmlFor="target_revenue_max">Maksimalni prihod (EUR)</Label>
                     <Input
-                      {...register("target_revenue_max")}
+                      {...register("target_revenue_max", { valueAsNumber: true })}
                       type="number"
                       placeholder="10000000"
-                      className={`h-12 rounded-none ${errors.target_revenue_max ? "border-destructive" : ""}`}
+                      className={`h-14 bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all duration-300 text-lg font-heading tracking-wide placeholder:text-muted-foreground/30 ${errors.target_revenue_max ? "border-destructive" : ""}`}
                     />
                     {errors.target_revenue_max && <p className="text-xs text-destructive">{errors.target_revenue_max.message}</p>}
                   </div>
@@ -396,7 +390,7 @@ export function BuyerOnboardingForm() {
                   <Textarea
                     {...register("investment_thesis")}
                     rows={5}
-                    className={`resize-none rounded-none ${errors.investment_thesis ? "border-destructive" : ""}`}
+                    className={`resize-none h-auto bg-transparent border-0 border-b-2 border-border/40 px-0 rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all duration-300 text-lg font-heading tracking-wide placeholder:text-muted-foreground/30 ${errors.investment_thesis ? "border-destructive" : ""}`}
                     placeholder="Objasnite koje sinergije, tržišta ili operativne ciljeve želite postići akvizicijom."
                   />
                   {errors.investment_thesis ? (
@@ -417,7 +411,7 @@ export function BuyerOnboardingForm() {
           variant="outline"
           onClick={handleBackStep}
           disabled={step === 1 || isPending}
-          className="w-full sm:w-auto rounded-none"
+          className="w-full sm:w-auto rounded-none transition-all duration-300 cursor-pointer hover:bg-card-elevated"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Natrag
@@ -427,9 +421,9 @@ export function BuyerOnboardingForm() {
           <Button
             type="button"
             onClick={handleNextStep}
-            className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90"
+            className="w-full sm:w-auto rounded-none bg-foreground text-background hover:bg-foreground/90 transition-all duration-300 cursor-pointer"
           >
-            Sljedeći korak
+            {step === 1 ? "Financijska Strukturiranja" : "Investicijska Teza"}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
@@ -439,9 +433,9 @@ export function BuyerOnboardingForm() {
               if (form) form.requestSubmit();
             }}
             disabled={isPending}
-            className="w-full sm:w-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full sm:w-auto rounded-none border border-primary/50 btn-shimmer bg-primary/10 text-primary-foreground hover:bg-primary/20 transition-all duration-500 cursor-pointer text-sm tracking-[0.1em] uppercase shadow-glow-gold"
           >
-            {isPending ? "Spremanje profila..." : "Spremi investicijski profil"}
+            {isPending ? "Aktivacija Pristupa..." : "Aktiviraj DealFlow Pristup"}
           </Button>
         )}
       </CardFooter>
